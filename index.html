@@ -19,7 +19,7 @@ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:en
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 [hidden]{display:none!important}
 html{scroll-padding-top:120px}
-body{margin:0 auto;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;max-width:600px;padding-bottom:150px;padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
+body{margin:0 auto;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;max-width:600px;padding-bottom:200px;padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
 .serif{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif}
 .ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .ic.fl{fill:currentColor;stroke:none}
@@ -264,7 +264,7 @@ dialog .bd{flex:1 1 auto;min-height:0}
 .vw .r span{display:block;font-size:12px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--mut)}
 .vw .r div{margin-top:3px;white-space:pre-wrap}
 .vw h3{margin:16px 0 0}
-.ebt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.ebt{display:grid;grid-template-columns:repeat(auto-fit,minmax(68px,1fr));gap:8px;margin:12px 0}
 .ebt div{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:10px;text-align:center}
 .ebt b{display:block;font:700 22px Georgia,serif}.ebt span{font-size:12px;color:var(--mut)}
 .ebc{border:1px solid var(--bd);border-radius:14px;padding:12px;margin-top:10px;background:var(--sf)}
@@ -418,7 +418,7 @@ dialog .bd{flex:1 1 auto;min-height:0}
 
 <dialog id="nDlg">
   <div class="hd"><h2>Programar próxima visita</h2></div>
-  <div class="bd"><label>Fecha</label><input id="nDate" type="date"><label>Qué toca hacer</label><input id="nWhat" placeholder="Ej: Estudio bíblico, oración, llevar alimentos..."></div>
+  <div class="bd"><label>Fecha</label><input id="nDate" type="date"><label>Hora (opcional)</label><select id="nHora"></select><label>Dirección</label><input id="nDir" autocomplete="off" placeholder="Dirección de la visita"><label>Qué toca hacer</label><input id="nWhat" placeholder="Ej: Estudio bíblico, oración, llevar alimentos..."></div>
   <div class="ft"><button id="nCancel">Cerrar</button><button class="pri" id="nSave">Guardar</button></div>
 </dialog>
 
@@ -457,12 +457,12 @@ dialog .bd{flex:1 1 auto;min-height:0}
   <div class="bd">
     <div class="row"><div><label>Fecha</label><input id="vDate" type="date"></div><div><label>Hora</label><select id="vHora"></select></div></div><label>Tipo de visita</label><select id="vTipo"></select>
     <label>Me acompañó</label><input id="vAc" autocomplete="off" placeholder="Nombre (opcional)">
-    <label>Atención pastoral dada</label><textarea id="vAt" rows="4" placeholder="Oración, estudio, consejería, necesidades..."></textarea><div class="qp" data-q="at"></div>
+    <div id="vAteW"><label>Tipo de atención</label><select id="vAte"></select></div><label>Atención pastoral dada</label><textarea id="vAt" rows="4" placeholder="Oración, estudio, consejería, necesidades..."></textarea><div class="qp" data-q="at"></div>
     <label>Observaciones</label><textarea id="vOb" rows="2"></textarea><div class="qp" data-q="ob"></div>
-    <label>Asignación para la persona</label><textarea id="vAs" rows="2" placeholder="Ej: leer el Salmo 23 cada día, asistir al PC..."></textarea><div class="qp" data-q="as"></div>
+    <label>Asignación para la persona</label><textarea id="vAs" rows="2" placeholder="Ej: leer el Salmo 23 cada día, asistir al grupo pequeño..."></textarea><div class="qp" data-q="as"></div>
     <details id="vNext"><summary>Programar próxima atención</summary>
       <label style="margin-top:4px">Fecha</label><input id="vNd" type="date">
-      <label>Qué toca hacer</label><input id="vNw" placeholder="Ej: Estudio bíblico, llevar alimentos..." style="margin-bottom:12px">
+      <label>Hora (opcional)</label><select id="vNh"></select><label>Dirección</label><input id="vNdir" autocomplete="off" placeholder="Dirección de la visita"><label>Qué toca hacer</label><input id="vNw" placeholder="Ej: Estudio bíblico, llevar alimentos..." style="margin-bottom:12px">
     </details>
   </div>
   <div class="ft"><button id="vCancel">Cerrar</button><button class="pri" id="vSave">Guardar</button></div>
@@ -556,18 +556,23 @@ const fmt=s=>s?s.split("-").reverse().join("/"):"";
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const TODAY=()=>iso(new Date());
 const addDays=(s,n)=>{const [y,m,d]=s.split("-").map(Number);const t=new Date(y,m-1,d+n);return iso(t)};
-const APP_VER="1.1";
+const APP_VER="1.2";
 const APP_URL=location.href.split("#")[0].split("?")[0].replace(/index\.html$/,"");
 const ESTADOS=["Activo","Inactivo","En otra IASD","Disciplinado","Apostasía","Desfraternizado","Paradero desconocido","Difunto"];
 const EST=["Testificador/a","Instructor/a Bíblico/a","Evangelista","Instructor/a laico"];
 const ECIV=["Soltero","Casado","Divorciado","Viudo","Unión libre"];
 const CATS=["Adventista","Amigo Invitado","Estudiante","Contacto"];
 const DIAS=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
+const horasOpts=()=>'<option value=""></option>'+HORAS.map(t=>'<option value="'+t+'">'+t+'</option>').join("");
 const HORAS=Array.from({length:24},(_,h)=>(h%12||12)+':00 '+(h<12?'AM':'PM'));
 const OPTS={estadoCivil:ECIV,categoria:CATS,pcDia:DIAS,pcHora:HORAS};
 const OBRA=["Testimonio","Publicaciones","Oración","Alabanzas","Consejería","Lecturas Bíblicas","Estudios bíblicos","Predicación","Campañas","Decisiones","Capacitación","Otro"];
 const obraTxt=p=>(p.obraSel||[]).map(o=>o==="Otro"&&p.obraOtro?"Otro: "+p.obraOtro:o).join(", ");
 const ageOf=p=>{const fn=fnacEf(p);if(!fn)return p.edad||"";const [y,m,d]=fn.split("-").map(Number);if(!y)return p.edad||"";const t=new Date();let a=t.getFullYear()-y;if(t.getMonth()+1<m||(t.getMonth()+1===m&&t.getDate()<d))a--;return a>=0?String(a):(p.edad||"")};
+const atnOk=k=>k==="Amigo Invitado"||k==="Estudiante"||k==="Contacto";
+const ATN=["Amistad","Asistencia","Oración","Liberación","Est. básico","Est. avanzado","Profecías","Salud","Otro"];
+const ATF={"Asistencia":"Asistencia social","Est. básico":"Estudio bíblico básico","Est. avanzado":"Estudio bíblico avanzado","Profecías":"Estudio sobre profecías","Salud":"Estudio de salud"};
+const atnOpts=()=>'<option value=""></option>'+ATN.map(t=>{let l=t;try{l=T(t)}catch(e){}return '<option value="'+t+'">'+l+'</option>'}).join("");
 const TIPOS=["Presencial","Estudio bíblico","Oración","Consejería","Virtual","Hospitalaria","Otro"];
 const TIPO_OLD={"Visita en casa":"Presencial","Llamada / mensaje":"Virtual","Visita en hospital":"Hospitalaria"};
 const SECS=[
@@ -723,7 +728,7 @@ function renderList(){
 }
 function pendCard(p,x){
   const late=x.fecha<TODAY();
-  return '<div class="card"><div class="'+(late?'late':'sub')+'">'+(late?T('⚠ Atrasada · '):'')+fmt(x.fecha)+'</div><div class="nm" style="margin-top:2px">'+esc(p.nombre)+'</div><div class="sub">'+esc(x.accion)+'</div>'+motLine(p)+'<div class="acts"><button class="pri" data-a="donep" data-id="'+p.id+'" data-id2="'+x.id+'">'+ic("check")+'Marcar como hecha</button></div><div class="acts" style="margin-top:8px"><button class="sm" data-a="open" data-id="'+p.id+'">Abrir ficha</button><button class="sm" data-a="cal" data-id="'+p.id+'" data-id2="'+x.id+'">'+ic("calendar")+'Calendario</button><button class="sm" data-a="ics" data-id="'+p.id+'" data-id2="'+x.id+'">'+ic("download")+'.ics</button></div></div>';
+  return '<div class="card"><div class="'+(late?'late':'sub')+'">'+(late?T('⚠ Atrasada · '):'')+fmt(x.fecha)+(x.hora?' · '+esc(x.hora):'')+'</div><div class="nm" style="margin-top:2px">'+esc(p.nombre)+'</div><div class="sub">'+esc(x.accion)+'</div>'+((x.dir||p.direccion)?'<div class="sub">📍 '+esc(x.dir||p.direccion)+'</div>':'')+motLine(p)+'<div class="acts"><button class="pri" data-a="donep" data-id="'+p.id+'" data-id2="'+x.id+'">'+ic("check")+'Marcar como hecha</button></div><div class="acts" style="margin-top:8px"><button class="sm" data-a="open" data-id="'+p.id+'">Abrir ficha</button><button class="sm" data-a="cal" data-id="'+p.id+'" data-id2="'+x.id+'">'+ic("calendar")+'Calendario</button><button class="sm" data-a="ics" data-id="'+p.id+'" data-id2="'+x.id+'">'+ic("download")+'.ics</button></div></div>';
 }
 function renderSub(){
   const A=avisos(),L=A[sub]||[];
@@ -741,11 +746,11 @@ function renderPerson(p){
   const vis=p.visits.slice().sort((a,b)=>b.fecha.localeCompare(a.fecha));
   $("app").innerHTML='<button class="gh sm" data-a="back" style="margin:-6px 0 8px -8px">'+ic("back")+T(backLabel())+'</button>'+
   '<div class="card prof"><div class="av">'+esc(initials(p.nombre))+'</div><div class="nm">'+esc(p.nombre)+'</div><div class="sub" style="margin-top:4px">'+(p.categoria?esc(T(p.categoria))+' · ':'')+p.visits.length+' '+T(p.visits.length==1?'visita':'visitas')+(lastVisit(p)?' · '+T('Última visita: ')+fmt(lastVisit(p)):'')+'</div>'+
-  '<div class="acts">'+(wa?'<a class="btn sm" href="tel:+'+wa+'">'+ic("phone")+'Llamar</a><a class="btn sm" target="_blank" href="https://wa.me/'+wa+'">'+ic("chat")+'WhatsApp</a>':'')+(p.direccion?'<a class="btn sm" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(p.direccion)+'">'+ic("search")+'Cómo llegar</a>':'')+'<button class="sm" data-a="edit">'+ic("edit")+'Editar ficha</button></div>'+discHtml(p)+
-  '<details style="text-align:left"><summary>Ver ficha completa</summary><div class="info">'+(info||'<div class="sub">Sin datos aún.</div>')+'</div></details></div>'+
+  '<div class="acts">'+(wa?'<a class="btn sm" href="tel:+'+wa+'">'+ic("phone")+'Llamar</a><a class="btn sm" target="_blank" href="https://wa.me/'+wa+'">'+ic("chat")+'WhatsApp</a>':'')+(p.direccion?'<a class="btn sm" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(p.direccion)+'">'+ic("search")+'Cómo llegar</a>':'')+'<button class="sm" data-a="edit">'+ic("edit")+'Editar ficha</button><button class="sm" data-a="viewp">'+ic("search")+'Ver ficha</button></div>'+discHtml(p)+
+  '</div>'+
   '<details class="card" style="margin-top:0"><summary>Pasajes bíblicos para la visita</summary>'+GROUPS.map(g=>'<div class="sub" style="margin-top:10px">'+T(g[0])+'</div>'+chips(g[1])).join("")+'<div style="height:10px"></div></details>'+
-  '<h3 class="hr">Próximas visitas<button class="sm" data-a="addn">'+ic("plus")+'Programar</button></h3>'+(pend.length?pend.map(x=>{const late=!x.hecho&&x.fecha<TODAY();return '<div class="card"><div class="'+(x.hecho?'done':late?'late':'sub')+'">'+(late?'⚠ ':'')+fmt(x.fecha)+'</div><div class="'+(x.hecho?'done':'')+'" style="margin-top:2px">'+esc(x.accion)+'</div><div class="acts"><button class="'+(x.hecho?'sm':'pri')+'" data-a="donep" data-id="'+p.id+'" data-id2="'+x.id+'">'+(x.hecho?T('↺ Reabrir'):ic("check")+T('Marcar como hecha'))+'</button></div><div class="acts" style="margin-top:8px">'+(x.hecho?'':'<button class="sm" data-a="cal" data-id="'+p.id+'" data-id2="'+x.id+'">'+ic("calendar")+'Calendario</button><button class="sm" data-a="ics" data-id="'+p.id+'" data-id2="'+x.id+'">'+ic("download")+'.ics</button>')+'<button class="sm dng" data-a="delpend" data-id2="'+x.id+'" data-t="Quitar" aria-label="Quitar">'+ic("trash")+'</button></div></div>'}).join(""):'<div class="sub" style="margin:0 2px">Ninguna programada.</div>')+
-  '<h3 class="hr">Historial de visitas<button class="sm pri" data-a="addv">'+ic("plus")+'Registrar visita</button></h3>'+(vis.length?vis.map(v=>'<div class="card vcard"><div class="top"><span class="dt">'+fmt(v.fecha)+(v.hora?' · '+esc(v.hora):'')+'</span><span class="tag">'+esc(T(v.tipo))+'</span></div><div style="margin-top:6px">'+esc(v.atencion||"(sin detalle)").replace(/\n/g,"<br>")+'</div>'+(v.acomp?'<div class="sub" style="margin-top:6px"><b>'+T('Me acompañó:')+'</b> '+esc(v.acomp)+'</div>':'')+(v.obs?'<div class="sub" style="margin-top:6px"><b>'+T('Observaciones:')+'</b> '+esc(v.obs)+'</div>':'')+(v.asig?'<div class="sub"><b>'+T('Asignación:')+'</b> '+esc(v.asig)+'</div>':'')+'<div class="acts"><button class="sm" data-a="editv" data-id2="'+v.id+'">'+ic("edit")+T("Editar")+'</button><button class="sm" data-a="viewv" data-id2="'+v.id+'">'+ic("search")+T("Ver")+'</button></div></div>').join(""):'<div class="sub" style="margin:0 2px">Aún no hay visitas registradas.</div>')+
+  '<h3 class="hr">Próximas visitas<button class="sm" data-a="addn">'+ic("plus")+'Programar</button></h3>'+(pend.length?pend.map(x=>{const late=!x.hecho&&x.fecha<TODAY();return '<div class="card"><div class="'+(x.hecho?'done':late?'late':'sub')+'">'+(late?'⚠ ':'')+fmt(x.fecha)+(x.hora?' · '+esc(x.hora):'')+'</div><div class="'+(x.hecho?'done':'')+'" style="margin-top:2px">'+esc(x.accion)+'</div>'+(x.dir?'<div class="sub">📍 '+esc(x.dir)+'</div>':'')+'<div class="acts"><button class="'+(x.hecho?'sm':'pri')+'" data-a="donep" data-id="'+p.id+'" data-id2="'+x.id+'">'+(x.hecho?T('↺ Reabrir'):ic("check")+T('Marcar como hecha'))+'</button></div><div class="acts" style="margin-top:8px">'+(x.hecho?'':'<button class="sm" data-a="cal" data-id="'+p.id+'" data-id2="'+x.id+'">'+ic("calendar")+'Calendario</button><button class="sm" data-a="ics" data-id="'+p.id+'" data-id2="'+x.id+'">'+ic("download")+'.ics</button>')+'<button class="sm dng" data-a="delpend" data-id2="'+x.id+'" data-t="Quitar" aria-label="Quitar">'+ic("trash")+'</button></div></div>'}).join(""):'<div class="sub" style="margin:0 2px">Ninguna programada.</div>')+
+  '<h3 class="hr">Historial de visitas<button class="sm pri" data-a="addv">'+ic("plus")+'Registrar visita</button></h3>'+(vis.length?vis.map(v=>'<div class="card vcard"><div class="top"><span class="dt">'+fmt(v.fecha)+(v.hora?' · '+esc(v.hora):'')+'</span><span class="tag">'+esc(T(v.tipo))+'</span></div>'+(v.ate?'<div class="sub" style="margin-top:6px"><b>'+esc(T(v.ate))+'</b></div>':'')+'<div style="margin-top:6px">'+esc(v.atencion||"(sin detalle)").replace(/\n/g,"<br>")+'</div>'+(v.acomp?'<div class="sub" style="margin-top:6px"><b>'+T('Me acompañó:')+'</b> '+esc(v.acomp)+'</div>':'')+(v.obs?'<div class="sub" style="margin-top:6px"><b>'+T('Observaciones:')+'</b> '+esc(v.obs)+'</div>':'')+(v.asig?'<div class="sub"><b>'+T('Asignación:')+'</b> '+esc(v.asig)+'</div>':'')+'<div class="acts"><button class="sm" data-a="editv" data-id2="'+v.id+'">'+ic("edit")+T("Editar")+'</button><button class="sm" data-a="viewv" data-id2="'+v.id+'">'+ic("search")+T("Ver")+'</button></div></div>').join(""):'<div class="sub" style="margin:0 2px">Aún no hay visitas registradas.</div>')+
   '<details style="margin-top:24px"><summary>Más opciones</summary><div class="acts" style="margin-top:0;margin-bottom:12px"><button class="sm dng" data-a="pickdel">Eliminar una visita</button><button class="sm dng" data-a="delperson">Eliminar persona</button></div></details>';
 }
 function twoTap(b,fn){
@@ -769,6 +774,7 @@ $("app").onclick=e=>{
   else if(a==="ics")addIcs(id,id2);
   else if(a==="icsall")addIcsAll();
   else if(a==="edit")openPerson(p);
+  else if(a==="viewp")openViewP(p);
   else if(a==="donep"){const x=p.pend.find(y=>y.id===id2);if(!x)return;if(x.hecho){x.hecho=false;save();render()}else askDone(p.id,x.id)}
   else if(a==="delpend")twoTap(b,()=>{p.pend=p.pend.filter(y=>y.id!==id2);save();render()});
   else if(a==="editv")openVisit(p.visits.find(v=>v.id===id2));
@@ -814,8 +820,9 @@ $("delGo").onclick=()=>{
   if(delSt.mode==="padall"){padDoAll();delSt=null;return}
   if(delSt.mode==="nvi"){nviDo();delSt=null;return}
   const p=person(delSt.pid);if(!p)return;
+  if(delSt.mode==="askperson")delSt.mode="person";
   if(delSt.mode==="visit"){const v=p.visits.find(x=>x.id===delSt.vid);p.visits=p.visits.filter(x=>x.id!==delSt.vid);save();closeDlg("delDlg");render();
-    toast("Visita eliminada",{label:"Deshacer",fn:()=>{const pp=person(p.id);if(pp&&v){pp.visits.push(v);save();render();toast("Visita restaurada ✓")}}})}
+    toast("Visita eliminada",{label:"Deshacer",fn:()=>{const pp=person(p.id);if(pp&&v){pp.visits.push(v);save();render();toast("Visita restaurada ✓")}}});if(!p.visits.length)setTimeout(()=>askDelPerson(p.id),400)}
   else if(delSt.mode==="person"){const idx=db.people.indexOf(p);db.people=db.people.filter(x=>x.id!==p.id);save();closeDlg("delDlg");view="vlist";render();
     toast("Persona eliminada",{label:"Deshacer",fn:()=>{db.people.splice(Math.min(idx,db.people.length),0,p);save();render();toast("Persona restaurada ✓")}})}
   delSt=null;
@@ -858,9 +865,9 @@ async function shareApp(){
 }
 
 // ---- próxima visita
-function openNext(){$("nDate").value="";$("nWhat").value="";openDlg("nDlg")}
+function openNext(){const p=person(curId);$("nDate").value="";$("nWhat").value="";$("nHora").innerHTML=horasOpts();$("nHora").value="";$("nDir").value=(p&&p.direccion)||"";openDlg("nDlg")}
 $("nCancel").onclick=()=>closeDlg("nDlg");
-$("nSave").onclick=()=>{const p=person(curId);if(!p)return;if(!$("nDate").value){toast("Falta la fecha");return}p.pend.push({id:uid(),fecha:$("nDate").value,accion:$("nWhat").value.trim()||"Visita de seguimiento",hecho:false});save();closeDlg("nDlg");render()};
+$("nSave").onclick=()=>{const p=person(curId);if(!p)return;if(!$("nDate").value){toast("Falta la fecha");return}p.pend.push({id:uid(),fecha:$("nDate").value,hora:$("nHora").value,dir:$("nDir").value.trim(),accion:$("nWhat").value.trim()||"Visita de seguimiento",hecho:false});save();closeDlg("nDlg");render()};
 
 // ---- ficha
 const fld=f=>{const id='p_'+f[0];let c;
@@ -879,7 +886,7 @@ $("pfBody").innerHTML=SECS.map((s,i)=>{
   else if(s[0]==="Obra misionera"){const g=k=>s[1].find(f=>f[0]===k);
     h+=fld(g("duo"))+'<label>Obra misionera (marca una o varias)</label><details class="ms" id="obDet"><summary id="obSum">Seleccionar…</summary>'+OBRA.map(o=>'<label class="ck"><input type="checkbox" class="obCk" value="'+o+'"> '+o+'</label>').join("")+'</details><div id="obOtroBox" style="display:none"><label>Escribe cuál</label><input id="p_obraOtro"></div>'+
     '<div id="gEst" style="display:none">'+fld(g("estCant"))+fld(g("estudiantes"))+'</div><div id="gBen" style="display:none">'+fld(g("benCant"))+fld(g("beneficiarios"))+'</div>'+fld(g("bautCant"))+fld(g("bautizados"))}
-  else if(s[0]==="Detalles de la visita")h+='<div class="row"><div><label>Fecha</label><input id="f_vfecha" type="date"></div><div><label>Hora</label><select id="f_vhora"><option value=""></option>'+HORAS.map(t=>'<option value="'+t+'">'+t+'</option>').join("")+'</select></div></div><label>Tipo de visita</label><select id="f_vtipo">'+TIPOS.map(t=>'<option value="'+t+'">'+t+'</option>').join("")+'</select><label>Atención pastoral dada</label><textarea id="f_vat" rows="3"></textarea><label>Me acompañó</label><input id="f_vac" autocomplete="off" placeholder="Nombre (opcional)">';
+  else if(s[0]==="Detalles de la visita")h+='<div class="row"><div><label>Fecha</label><input id="f_vfecha" type="date"></div><div><label>Hora</label><select id="f_vhora"><option value=""></option>'+HORAS.map(t=>'<option value="'+t+'">'+t+'</option>').join("")+'</select></div></div><label>Tipo de visita</label><select id="f_vtipo">'+TIPOS.map(t=>'<option value="'+t+'">'+t+'</option>').join("")+'</select><div id="f_vateW"><label>Tipo de atención</label><select id="f_vate">'+atnOpts()+'</select></div><label>Atención pastoral dada</label><textarea id="f_vat" rows="3"></textarea><label>Me acompañó</label><input id="f_vac" autocomplete="off" placeholder="Nombre (opcional)">';
   else h+=s[1].map(f=>fld(f)+(s[0]==="Datos personales"?(XTRA[f[0]]||""):"")).join("");
   return h+'<div style="height:10px"></div></details>'}).join("");
 function updObra(){const sel=[...document.querySelectorAll("#pfBody .obCk:checked")].map(c=>c.value);
@@ -896,7 +903,7 @@ function setupIg(v){const sl=$("p_iglesiaSel"),inp=$("p_iglesia"),L=db.iglesias|
   else{sl.value="__otra";inp.style.display=""}}
 function igSel(){const sl=$("p_iglesiaSel"),inp=$("p_iglesia");if(sl.value==="__otra"){inp.value="";inp.style.display=""}else{inp.value=sl.value;inp.style.display="none"}}
 function updAge(){const f=$("p_fnac").value,e=$("p_edad");if(f){e.value=ageOf({fnac:f});e.readOnly=true}else e.readOnly=false}
-$("pfBody").addEventListener("change",e=>{const t=e.target;if(t.id==="p_fnac"||t.id==="p_estSel")updPInfo();if(t.classList.contains("obCk"))updObra();if(t.id==="p_iglesiaSel")igSel();if(t.id==="p_fnac")updAge()});
+$("pfBody").addEventListener("change",e=>{const t=e.target;if(t.id==="p_fnac"||t.id==="p_estSel"||t.id==="p_categoria")updPInfo();if(t.classList.contains("obCk"))updObra();if(t.id==="p_iglesiaSel")igSel();if(t.id==="p_fnac")updAge()});
 $("pfBody").addEventListener("input",e=>{if(e.target.id==="p_fnac"){updAge();updPInfo()}if(e.target.id==="p_nombre")updNmSug()});
 function openPerson(p){
   editPid=p?p.id:null;$("pTitle").textContent=T(p?"Editar ficha":"Nueva persona");$("aiText").value="";$("aiPhoto").value="";$("aiMsg").textContent="";$("aiBox").open=false;$("aiBox").style.display=window.claude?"":"none";
@@ -907,7 +914,7 @@ function openPerson(p){
   $("p_obraOtro").value=(p&&p.obraOtro)||"";updObra();setupIg($("p_iglesia").value);updAge();
   $("p_fnac").max=TODAY();$("f_vfecha").max=TODAY();
   const v0=p&&p.visits[0];
-  $("f_vfecha").value=v0?v0.fecha:(p?"":TODAY());$("f_vhora").value=(v0&&v0.hora)||"";$("f_vtipo").value=v0?v0.tipo:TIPOS[0];$("f_vat").value=v0?(v0.atencion||""):"";$("f_vac").value=v0?(v0.acomp||""):"";
+  $("f_vfecha").value=v0?v0.fecha:(p?"":TODAY());$("f_vhora").value=(v0&&v0.hora)||"";$("f_vtipo").value=v0?v0.tipo:TIPOS[0];$("f_vat").value=v0?(v0.atencion||""):"";$("f_vate").innerHTML=atnOpts();$("f_vate").value=(v0&&v0.ate)||"";$("f_vac").value=v0?(v0.acomp||""):"";
   curPm=(p&&p.padronId)||null;fnacRech=(p&&p.fnacRech)||"";const es=p?estOf(p):{e:"",nota:""};$("p_estSel").value=es.e||"";$("p_estNota").value=es.nota||"";$("nmSug").innerHTML="";updPInfo();
   openDlg("pDlg");$("pfBody").parentNode.scrollTop=0;
 }
@@ -923,7 +930,7 @@ $("pSave").onclick=()=>{
   if(d.iglesia){db.iglesias=db.iglesias||[];if(!db.iglesias.includes(d.iglesia)){db.iglesias.push(d.iglesia);db.iglesias.sort((a,b)=>a.localeCompare(b,"es"))}}
   if(curPm)d.padronId=curPm;
   const evv=$("p_estSel").value,env=$("p_estNota").value.trim();
-  const vd={fecha:$("f_vfecha").value,hora:$("f_vhora").value,tipo:$("f_vtipo").value||TIPOS[0],atencion:$("f_vat").value.trim(),acomp:$("f_vac").value.trim()};
+  const vd={fecha:$("f_vfecha").value,hora:$("f_vhora").value,tipo:$("f_vtipo").value||TIPOS[0],atencion:$("f_vat").value.trim(),ate:$("f_vate").value,acomp:$("f_vac").value.trim()};
   let p=editPid?person(editPid):null;
   if(p){Object.assign(p,d);const v0=p.visits[0];if(v0){if(vd.fecha)Object.assign(v0,vd)}else if(vd.fecha)p.visits.push(Object.assign({id:uid(),obs:"",asig:""},vd))}
   else{p=Object.assign({id:uid(),visits:[Object.assign({id:uid(),obs:"",asig:""},vd,{fecha:vd.fecha||TODAY(),atencion:vd.atencion||"Primera visita: se llenó la ficha."})],pend:[]},d);db.people.push(p)}
@@ -963,7 +970,7 @@ function openVisit(v,pendX){
   const p=person(curId);vDonePend=pendX?pendX.id:null;
   editVid=v?v.id:null;$("vTitle").textContent=T(v?"Editar visita":"Registrar persona visitada");$("vWho").textContent=p?p.nombre:"";
   $("vDate").max=TODAY();
-  $("vDate").value=v?v.fecha:TODAY();$("vHora").value=v&&v.hora||"";$("vTipo").value=v?v.tipo:TIPOS[0];$("vAt").value=v?v.atencion:(pendX?pendX.accion:"");$("vAc").value=v?v.acomp||"":"";$("vOb").value=v?v.obs||"":"";$("vAs").value=v?v.asig||"":"";
+  $("vNh").innerHTML=horasOpts();$("vNh").value="";$("vNdir").value=(p&&p.direccion)||"";$("vDate").value=v?v.fecha:TODAY();$("vHora").value=(v&&v.hora)||(pendX&&pendX.hora)||"";$("vTipo").value=v?v.tipo:TIPOS[0];$("vAte").innerHTML=atnOpts();$("vAteW").style.display=(p&&atnOk(p.categoria))?"":"none";$("vAte").value=(v&&v.ate)||"";$("vAt").value=v?v.atencion:(pendX?pendX.accion:"");$("vAc").value=v?v.acomp||"":"";$("vOb").value=v?v.obs||"":"";$("vAs").value=v?v.asig||"":"";
   $("vNd").value="";$("vNw").value="";$("vNext").open=false;$("vNext").style.display=v?"none":"block";
   fillQp();openDlg("vDlg");
 }
@@ -972,11 +979,12 @@ $("vSave").onclick=()=>{
   const p=person(curId);if(!p)return;
   const fecha=$("vDate").value;if(!fecha){toast("Falta la fecha");return}
   if(fecha>TODAY()){toast("La fecha de la visita no puede ser futura. Usa “Programar próxima visita”.");return}
-  const d={fecha,hora:$("vHora").value,tipo:$("vTipo").value,atencion:$("vAt").value.trim(),obs:$("vOb").value.trim(),asig:$("vAs").value.trim(),acomp:$("vAc").value.trim()};
+  const d={fecha,hora:$("vHora").value,tipo:$("vTipo").value,atencion:$("vAt").value.trim(),ate:$("vAte").value,obs:$("vOb").value.trim(),asig:$("vAs").value.trim(),acomp:$("vAc").value.trim()};
+  if(vDonePend){const px=p.pend.find(y=>y.id===vDonePend);if(px&&px.dir)d.dir=px.dir}
   if(editVid)Object.assign(p.visits.find(v=>v.id===editVid),d);
   else{p.visits.push(Object.assign({id:uid()},d));
     if(vDonePend){const x=p.pend.find(y=>y.id===vDonePend);if(x)x.hecho=true;vDonePend=null}
-    if($("vNd").value)p.pend.push({id:uid(),fecha:$("vNd").value,accion:$("vNw").value.trim()||"Dar seguimiento",hecho:false})}
+    if($("vNd").value)p.pend.push({id:uid(),fecha:$("vNd").value,hora:$("vNh").value,dir:$("vNdir").value.trim(),accion:$("vNw").value.trim()||"Dar seguimiento",hecho:false})}
   save();closeDlg("vDlg");render();toast("Visita guardada ✓");
 };
 
@@ -1161,6 +1169,7 @@ async function saveXlsx(sheets,name){
 }
 async function saveAs(name,mime,buf){let d=null;try{d=window.claude?await claude.use("downloads"):null}catch(e){}
   if(d){try{await d.save({filename:name,data:buf.slice(0)});toast("Tu archivo se está descargando",null,6000);return}catch(e){if(e&&e.code==="declined")return}}
+  try{const f=new File([buf],name,{type:mime});const ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);if(ios&&navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:name});return}catch(e){if(e&&e.name==="AbortError")return}}}catch(e){}
   try{const u=URL.createObjectURL(new Blob([buf],{type:mime}));const a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();toast("Tu archivo se está descargando",null,6000)}catch(e){toast("No se pudo crear el archivo")}}
 
 let repFmt="xlsx";
@@ -1192,7 +1201,7 @@ function catalog(NV){
   C.push({id:"pf",g:"Visitas",label:"Próxima visita (fecha)",get:p=>{const x=nextPend(p);return x?x.fecha:""}});
   C.push({id:"pq",g:"Visitas",label:"Próxima visita (qué toca)",get:p=>{const x=nextPend(p);return x?x.accion:""}});
   for(let i=0;i<NV;i++){const nm="Visita "+(i+1);
-    [["Fecha","fecha"],["Hora","hora"],["Tipo","tipo"],["Me acompañó","acomp"],["Atención","atencion"],["Observaciones","obs"],["Asignación","asig"]].forEach(([l,k])=>C.push({id:"v"+i+k,g:"Detalle de las visitas",vg:1,label:nm+" "+l,get:p=>{const v=p.visits.slice().sort((a,b)=>a.fecha.localeCompare(b.fecha))[i];return v?(v[k]||""):""}}))}
+    [["Fecha","fecha"],["Hora","hora"],["Tipo","tipo"],["Tipo de atención","ate"],["Me acompañó","acomp"],["Atención","atencion"],["Observaciones","obs"],["Asignación","asig"]].forEach(([l,k])=>C.push({id:"v"+i+k,g:"Detalle de las visitas",vg:1,label:nm+" "+l,get:p=>{const v=p.visits.slice().sort((a,b)=>a.fecha.localeCompare(b.fecha))[i];return v?(v[k]||""):""}}))}
   return C;
 }
 const nextPend=p=>p.pend.filter(x=>!x.hecho).sort((a,b)=>a.fecha.localeCompare(b.fecha))[0];
@@ -1201,12 +1210,12 @@ function personasRows(cols){return db.people.map(p=>cols.map(c=>c.get(p)))}
 async function repCompleto(){
   const NV=nvMax(),cols=catalog(NV),cfg=cfgData();
   const visitas=[],pend=[];
-  db.people.forEach(p=>{p.visits.forEach(v=>visitas.push([p.nombre,v.fecha,v.hora||"",v.tipo,v.acomp||"",v.atencion||"",v.obs||"",v.asig||""]));
-    p.pend.forEach(x=>pend.push([p.nombre,x.fecha,x.accion,x.hecho?"Hecha":(x.fecha<TODAY()?"Atrasada":"Pendiente")]))});
+  db.people.forEach(p=>{p.visits.forEach(v=>visitas.push([p.nombre,v.fecha,v.hora||"",v.tipo,v.ate||"",v.acomp||"",v.atencion||"",v.obs||"",v.asig||"",v.dir||""]));
+    p.pend.forEach(x=>pend.push([p.nombre,x.fecha+(x.hora?" "+x.hora:""),x.accion,x.hecho?"Hecha":(x.fecha<TODAY()?"Atrasada":"Pendiente")]))});
   visitas.sort((a,b)=>b[1].localeCompare(a[1]));pend.sort((a,b)=>a[1].localeCompare(b[1]));
   await outReport({title:"INFORME COMPLETO",cfg,sheets:[
     {name:"Personas",heads:cols.map(c=>c.label),rows:personasRows(cols)},
-    {name:"Visitas",heads:["Persona","Fecha","Hora","Tipo de visita","Me acompañó","Atención pastoral dada","Observaciones","Asignación"],rows:visitas.length?visitas:[[""]]},
+    {name:"Visitas",heads:["Persona","Fecha","Hora","Tipo de visita","Tipo de atención","Me acompañó","Atención pastoral dada","Observaciones","Asignación","Dirección"],rows:visitas.length?visitas:[[""]]},
     {name:"Pendientes",heads:["Persona","Fecha programada","Qué toca hacer","Estado"],rows:pend.length?pend:[[""]]}
   ]},"visitacion-completo-"+TODAY());
 }
@@ -1690,7 +1699,7 @@ $("eHint").onclick=e=>{if(e.target.closest("#eConf")&&eM){const ce=canonEstado(e
 $("eCancel").onclick=()=>closeDlg("eDlg");
 $("eSave").onclick=()=>{if(!eM)return;const r=document.querySelector("input[name=eRad]:checked");setEstM(eM,r?r.value:"",$("eNota").value.trim());save();closeDlg("eDlg");if($("covDlg").open)renderCov();render();toast("Estado guardado ✓")};
 // mensajes de la ficha (nombre, fecha de nacimiento, estado)
-function updPInfo(){
+function updPInfo(){const w=$("f_vateW"),ct=$("p_categoria");if(w)w.style.display=(ct&&atnOk(ct.value))?"":"none";
   const m=curPm&&db.padron?memMap().get(curPm):null;
   const nl=$("nmLink");nl.hidden=!m;if(m)nl.textContent="🔗 "+T("Vinculada al informe de feligresía");
   const fm=$("fnacMsg"),fv=$("p_fnac").value;
@@ -1845,9 +1854,9 @@ function vwRows(pairs){return pairs.filter(x=>x[1]&&String(x[1]).trim()).map(x=>
 function secRows(p,name){const s=SECS.find(x=>x[0]===name);return s?vwRows(s[1].map(f=>[f[1],f[2]==="date"?(p[f[0]]?fmt(p[f[0]]):""):p[f[0]]])):""}
 let vwCur=null;
 function openView(p,v){
-  if(!p||!v)return;vwCur={pid:p.id,vid:v.id};
+  if(!p||!v)return;vwCur={pid:p.id,vid:v.id};$("vwTitle").textContent=T("Detalle de la visita");$("vwNew").textContent=T("Registrar visita de seguimiento");$("vwEdit").textContent=T("Editar");
   $("vwSub").textContent=p.nombre+" · "+fmt(v.fecha)+(v.hora?" · "+v.hora:"");
-  let h='<div class="vw"><dl>'+vwRows([["Tipo de visita",T(v.tipo)],["Atención pastoral dada",v.atencion],["Me acompañó",v.acomp],["Observaciones",v.obs],["Asignación para la persona",v.asig]])+'</dl>';
+  let h='<div class="vw"><dl>'+vwRows([["Tipo de visita",T(v.tipo)],["Tipo de atención",v.ate?T(v.ate):""],["Atención pastoral dada",v.atencion],["Me acompañó",v.acomp],["Observaciones",v.obs],["Dirección",v.dir],["Asignación para la persona",v.asig]])+'</dl>';
   if(p.visits[0]&&p.visits[0].id===v.id){
     const f=secRows(p,"Favoritos"),n=secRows(p,"Necesidades"),d=secRows(p,"Dones y ministerio"),o=vwRows([["Observaciones",p.observaciones],["Asignaciones",p.asignaciones]]);
     if(f)h+='<h3>'+T("Favoritos")+'</h3><dl>'+f+'</dl>';
@@ -1858,7 +1867,7 @@ function openView(p,v){
   $("vwBody").innerHTML=h+'</div>';openDlg("vwDlg");$("vwBody").scrollTop=0;
 }
 $("vwClose").onclick=()=>closeDlg("vwDlg");
-$("vwEdit").onclick=()=>{const p=vwCur&&person(vwCur.pid),v=p&&p.visits.find(x=>x.id===vwCur.vid);closeDlg("vwDlg");if(v){curId=p.id;openVisit(v)}};
+$("vwEdit").onclick=()=>{if(vwCur&&vwCur.person){const q=person(vwCur.pid);closeDlg("vwDlg");if(q)openPerson(q);return}const p=vwCur&&person(vwCur.pid),v=p&&p.visits.find(x=>x.id===vwCur.vid);closeDlg("vwDlg");if(v){curId=p.id;openVisit(v)}};
 $("vwNew").onclick=()=>{const p=vwCur&&person(vwCur.pid);closeDlg("vwDlg");if(p){curId=p.id;openVisit(null)}};
 
 // ---- estudios bíblicos (la hoja de las secretarias, publicada con Google Apps Script)
@@ -1874,15 +1883,15 @@ function renderEb(){
     b.innerHTML='<label style="margin-top:14px">'+T("Enlace de la hoja de estudios")+'</label><input id="ebUrl" autocomplete="off" autocapitalize="none" placeholder="https://script.google.com/macros/s/…/exec" value="'+esc(E.url||"")+'"><label>'+T("Clave del pastor")+'</label><input id="ebKey" autocomplete="off" autocapitalize="none" value="'+esc(E.key||"")+'"><div class="sub" style="margin-top:10px">'+T("El enlace termina en /exec. La clave del pastor te la muestra la hoja en el menú Siervo Fiel → Ver mi clave de pastor.")+'</div><div id="ebMsg" class="fmsg" hidden></div>';
     return}
   $("ebGo").textContent=T("Traer estudios");
-  const F=(E.filas||[]),igs=[...new Set(F.map(f=>f["Iglesia"]).filter(Boolean))].sort((a,c)=>a.localeCompare(c,"es"));
+  const ALLR=(E.filas||[]),F=ALLR.filter(f=>!f["Retirado"]),nRet=ALLR.length-F.length,igs=[...new Set(F.map(f=>f["Iglesia"]).filter(Boolean))].sort((a,c)=>a.localeCompare(c,"es"));
   if(ebIg&&!igs.includes(ebIg))ebIg="";
   const L=F.filter(f=>!ebIg||f["Iglesia"]===ebIg).sort((a,c)=>(a["Iglesia"]||"").localeCompare(c["Iglesia"]||"","es")||ebName(a).localeCompare(ebName(c),"es"));
   const series=new Set(L.map(f=>f["Estudio bíblico"]).filter(Boolean)),gps=new Set(L.map(f=>f["GP"]).filter(Boolean));
-  $("ebSub").textContent=E.at?T("Actualizado: ")+new Date(E.at).toLocaleString(LANG):T("Aún no se han traído estudios.");
-  b.innerHTML='<div class="ebt"><div><b>'+L.length+'</b><span>'+T("Estudiantes")+'</span></div><div><b>'+series.size+'</b><span>'+T("Series")+'</span></div><div><b>'+gps.size+'</b><span>'+T("Grupos pequeños")+'</span></div></div>'+
+  $("ebSub").textContent=(E.at?T("Actualizado: ")+new Date(E.at).toLocaleString(LANG):T("Aún no se han traído estudios."))+(nRet?" · "+T("Retirados")+": "+nRet:"");
+  b.innerHTML='<div class="ebt"><div><b>'+L.length+'</b><span>'+T("Estudiantes")+'</span></div><div><b>'+series.size+'</b><span>'+T("Series")+'</span></div><div><b>'+gps.size+'</b><span>'+T("Grupos pequeños")+'</span></div><div><b>'+L.filter(f=>f["Graduado"]).length+'</b><span>'+T("Graduados")+'</span></div><div><b>'+L.filter(f=>f["Bautizado"]).length+'</b><span>'+T("Bautizados")+'</span></div></div>'+
   (igs.length>1?'<select id="ebIg"><option value="">'+T("Todas las iglesias")+'</option>'+igs.map(x=>'<option value="'+esc(x)+'"'+(x===ebIg?' selected':'')+'>'+esc(x)+'</option>').join("")+'</select>':'')+
   (L.length?L.map(f=>{const n=ebLesson(f),pc=Math.min(100,Math.round(n/EBN*100)),tel=(f["Teléfono"]||"").replace(/\D/g,"");
-    return '<div class="ebc"><b>'+esc(ebName(f))+'</b><div class="sub">'+esc([f["Iglesia"],f["Estudio bíblico"],f["GP"]&&T("GP")+": "+f["GP"]].filter(Boolean).join(" · "))+'</div>'+
+    return '<div class="ebc"><b>'+esc(ebName(f))+'</b>'+(f["Graduado"]?' <span class="tag">'+T("Graduado")+' ✔</span>':'')+(f["Bautizado"]?' <span class="tag">'+T("Bautizado")+' ✔</span>':'')+'<div class="sub">'+esc([f["Iglesia"],f["Estudio bíblico"],f["GP"]&&T("GP")+": "+f["GP"]].filter(Boolean).join(" · "))+'</div>'+
     '<div class="sub" style="margin-top:6px">'+T("Lección")+" "+n+" / "+EBN+" · "+pc+" %"+(f["Instructores"]?" · "+esc(f["Instructores"]):"")+'</div><div class="pg"><i style="width:'+pc+'%"></i></div>'+
     (f["Interés"]?'<div class="sub" style="margin-top:6px">'+T("Interés")+": "+esc(f["Interés"])+'</div>':'')+
     (tel?'<div class="acts"><a class="btn sm" href="tel:+'+tel+'">'+ic("phone")+T("Llamar")+'</a></div>':'')+(f["Detalles"]?'<div class="sub" style="margin-top:6px">'+esc(f["Detalles"])+'</div>':'')+'</div>'}).join(""):'<div class="empty">'+T("Aún no hay estudiantes.")+'</div>')+
@@ -1910,6 +1919,27 @@ async function ebFetch(){
 function openEb(){ebState().edit=false;renderEb();openDlg("ebDlg")}
 $("ebClose").onclick=()=>closeDlg("ebDlg");
 $("ebGo").onclick=ebFetch;
+
+// ---- v1.2: ver ficha (solo lectura), pregunta al quedar sin visitas
+function openViewP(p){
+  vwCur={pid:p.id,person:true};
+  $("vwTitle").textContent=T("Ficha de la persona");$("vwSub").textContent=p.nombre;
+  $("vwNew").textContent=T("Registrar visita");$("vwEdit").textContent=T("Editar ficha");
+  const gen=vwRows([].concat(SECS.filter(s=>["Favoritos","Necesidades","Dones y ministerio","Detalles de la visita"].indexOf(s[0])<0).flatMap(s=>s[1].filter(f=>f[0]!=="nombre").map(f=>[f[1],f[0]==="edad"?ageOf(p):f[0]==="fnac"?(fnacEf(p)?fmt(fnacEf(p)):""):f[2]==="date"?(p[f[0]]?fmt(p[f[0]]):""):p[f[0]]]))).concat([["Obra misionera",obraTxt(p)],["Estado de la persona",estOf(p).e?T(estOf(p).e)+(estOf(p).nota?" · "+estOf(p).nota:""):""],["Estrategia I Will Go",p.est&&p.est.length?p.est.join(", "):""]]));
+  let h='<div class="vw"><dl>'+(gen||"")+'</dl>';
+  [["Favoritos"],["Necesidades"],["Dones y ministerio"]].forEach(([n])=>{const r=secRows(p,n);if(r)h+='<h3>'+T(n)+'</h3><dl>'+r+'</dl>'});
+  const o=vwRows([["Observaciones",p.observaciones],["Asignaciones",p.asignaciones]]);if(o)h+='<h3>'+T("Para uso exclusivo del visitador")+'</h3><dl>'+o+'</dl>';
+  if(!gen&&h.length<60)h+='<div class="sub">'+T("Sin datos aún.")+'</div>';
+  $("vwBody").innerHTML=h+'</div>';openDlg("vwDlg");$("vwBody").scrollTop=0;
+}
+function askDelPerson(pid){
+  const p=person(pid);if(!p||p.visits.length)return;
+  delSt={mode:"askperson",pid:p.id};$("delTitle").textContent=T("¿Quieres también eliminar la ficha de esta persona del registro de visitas realizadas?");
+  $("delSub").textContent=p.nombre;$("delGo").hidden=false;$("delGo").textContent=T("Sí, eliminarla");
+  $("delBody").innerHTML='<div class="note" style="margin-top:14px">'+T("Se borrarán la ficha y sus")+' <b>0</b> '+T("visitas")+' '+T("y sus pendientes.")+'</div>';
+  $("delCancel").textContent=T("No, dejarla");openDlg("delDlg");
+}
+$("delDlg").addEventListener("close",()=>{$("delCancel").textContent=T("Cancelar")});
 
 $("bClose").onclick=()=>$("bDlg").close();
 
@@ -1940,14 +1970,17 @@ $("impSave").onclick=()=>{
 };
 
 // ---- calendario y recordatorios
+function hrParse(h){const m=/^(\d+):(\d+) (AM|PM)$/.exec(h||"");if(!m)return null;let H=+m[1]%12;if(m[3]==="PM")H+=12;return H}
+const p2=n=>String(n).padStart(2,"0");
+function evTimes(x){const H=hrParse(x.hora);if(H==null)return ["T090000","T100000"];return ["T"+p2(H)+"0000","T"+p2((H+1)%24)+"0000"]}
 function calData(pid,xid){const p=person(pid),x=p&&p.pend.find(y=>y.id===xid);return x?{p,x,t:T("Visita")+": "+p.nombre}:null}
 function addCal(pid,xid){const c=calData(pid,xid);if(!c)return;const d=c.x.fecha.replace(/-/g,"");
-  const u="https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent(c.t)+"&details="+encodeURIComponent(c.x.accion||"")+"&dates="+d+"T090000/"+d+"T100000";
+  const u="https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent(c.t)+"&details="+encodeURIComponent(c.x.accion||"")+"&dates="+d+evTimes(c.x)[0]+"/"+d+evTimes(c.x)[1]+((c.x.dir||c.p.direccion)?"&location="+encodeURIComponent(c.x.dir||c.p.direccion):"");
   const a=document.createElement("a");a.href=u;a.target="_blank";a.rel="noopener";document.body.appendChild(a);a.click();a.remove()}
 const icsQ=z=>String(z).replace(/[\\;,]/g,m=>"\\"+m).replace(/\n/g,"\\n");
 function icsEvent(p,x){
   const d=x.fecha.replace(/-/g,""),t=T("Visita")+": "+p.nombre;
-  return ["BEGIN:VEVENT","UID:"+x.id+"@siervofiel","DTSTAMP:"+new Date().toISOString().replace(/[-:]/g,"").split(".")[0]+"Z","DTSTART:"+d+"T090000","DTEND:"+d+"T100000","SUMMARY:"+icsQ(t),"DESCRIPTION:"+icsQ(x.accion||""),
+  return ["BEGIN:VEVENT","UID:"+x.id+"@siervofiel","DTSTAMP:"+new Date().toISOString().replace(/[-:]/g,"").split(".")[0]+"Z","DTSTART:"+d+evTimes(x)[0],"DTEND:"+d+evTimes(x)[1],"SUMMARY:"+icsQ(t),...((x.dir||p.direccion)?["LOCATION:"+icsQ(x.dir||p.direccion)]:[]),"DESCRIPTION:"+icsQ(x.accion||""),
   "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+icsQ(t),"TRIGGER:-PT24H","END:VALARM",
   "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+icsQ(t),"TRIGGER:-PT3H","END:VALARM","END:VEVENT"];
 }
@@ -2631,6 +2664,33 @@ No se pudo leer la hoja. Revisa el enlace.|Could not read the sheet. Check the l
 Sin Internet. Se muestran los últimos estudios guardados.|No Internet. Showing the last saved studies.|Pas d'Internet. Les dernières études enregistrées sont affichées.
 Hay una versión nueva de Siervo Fiel.|There is a new version of Siervo Fiel.|Une nouvelle version de Siervo Fiel est disponible.
 Actualizar|Update|Mettre à jour
+Retirados|Withdrawn|Retirés
+Graduados|Graduates|Diplômés
+Graduado|Graduate|Diplômé
+Bautizados|Baptized|Baptisés
+Bautizado|Baptized|Baptisé
+Tipo de atención|Type of care|Type de soin
+Amistad|Friendship|Amitié
+Asistencia|Assistance|Assistance
+Liberación|Deliverance|Délivrance
+Est. básico|Basic study|Étude de base
+Est. avanzado|Advanced study|Étude avancée
+Profecías|Prophecy|Prophétie
+Salud|Health|Santé
+Hora (opcional)|Time (optional)|Heure (facultatif)
+Dirección de la visita|Visit address|Adresse de la visite
+Ver ficha|View record|Voir la fiche
+Ficha de la persona|Person's record|Fiche de la personne
+Sí, eliminarla|Yes, delete it|Oui, la supprimer
+No, dejarla|No, keep it|Non, la garder
+¿Quieres también eliminar la ficha de esta persona del registro de visitas realizadas?|Do you also want to delete this person's record from the completed visits log?|Voulez-vous aussi supprimer la fiche de cette personne du registre des visites effectuées ?
+Fecha|Date|Date
+Buscar...|Search...|Rechercher...
+Ej: Estudio bíblico, oración, llevar alimentos...|E.g.: Bible study, prayer, bringing food...|Ex. : étude biblique, prière, apporter des vivres...
+Ej: Estudio bíblico, llevar alimentos...|E.g.: Bible study, bringing food...|Ex. : étude biblique, apporter des vivres...
+Toca el micrófono del teclado y habla: María López, 45 años, casada, 2 hijos...|Tap the keyboard microphone and speak: María López, 45, married, 2 children...|Touchez le micro du clavier et parlez : María López, 45 ans, mariée, 2 enfants...
+Oración, estudio, consejería, necesidades...|Prayer, study, counseling, needs...|Prière, étude, conseil, besoins...
+Ej: leer el Salmo 23 cada día, asistir al grupo pequeño...|E.g.: read Psalm 23 every day, attend the small group...|Ex. : lire le Psaume 23 chaque jour, assister au petit groupe...
 `.split("\n").forEach(l=>{const a=l.split("|");if(a.length>2)D[a[0]]={en:a[1],fr:a[2]}});
 const T=s=>LANG==="es"||!D[s]?s:D[s][LANG];
 function tr(root){
