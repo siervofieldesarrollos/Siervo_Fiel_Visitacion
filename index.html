@@ -287,7 +287,7 @@ dialog .bd{flex:1 1 auto;min-height:0}
 <div id="toast"><span id="toastT"></span><button id="toastB" hidden></button></div>
 
 <dialog id="rvDlg">
-  <div class="hd"><h2>Registrar persona visitada</h2><div class="sub">Busca a la persona por nombre o código. Si no está, crea una nueva.</div></div>
+  <div class="hd"><h2 id="rvTitle">Registrar persona visitada</h2><div class="sub">Busca a la persona por nombre o código. Si no está, crea una nueva.</div></div>
   <div class="bd"><input id="rvQ" type="search" placeholder="Nombre o código..." autocomplete="off" style="margin-top:14px"><button class="pri" id="rvNew" style="width:100%;margin-top:12px">Nueva persona</button><div id="rvRes"></div></div>
   <div class="ft"><button id="rvClose">Cerrar</button></div>
 </dialog>
@@ -414,7 +414,7 @@ dialog .bd{flex:1 1 auto;min-height:0}
 </dialog>
 
 <dialog id="nDlg">
-  <div class="hd"><h2>Programar próxima visita</h2></div>
+  <div class="hd"><h2 id="nTitle">Programar próxima visita</h2><div class="sub" id="nWho"></div></div>
   <div class="bd"><label>Fecha</label><input id="nDate" type="date"><label>Hora (opcional)</label><select id="nHora"></select><label>Dirección</label><input id="nDir" autocomplete="off" placeholder="Dirección de la visita"><label>Qué toca hacer</label><input id="nWhat" placeholder="Ej: Estudio bíblico, oración, llevar alimentos..."></div>
   <div class="ft"><button id="nCancel">Cerrar</button><button class="pri" id="nSave">Guardar</button></div>
 </dialog>
@@ -553,7 +553,7 @@ const fmt=s=>s?s.split("-").reverse().join("/"):"";
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const TODAY=()=>iso(new Date());
 const addDays=(s,n)=>{const [y,m,d]=s.split("-").map(Number);const t=new Date(y,m-1,d+n);return iso(t)};
-const APP_VER="1.2";
+const APP_VER="1.3";
 const APP_URL=location.href.split("#")[0].split("?")[0].replace(/index\.html$/,"");
 const ESTADOS=["Activo","Inactivo","En otra IASD","Disciplinado","Apostasía","Desfraternizado","Paradero desconocido","Difunto"];
 const EST=["Testificador/a","Instructor/a Bíblico/a","Evangelista","Instructor/a laico"];
@@ -664,6 +664,7 @@ const nrm=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase()
 const openDlg=id=>{const d=$(id);if(!d.open)d.showModal()};
 const closeDlg=id=>{const d=$(id);if(d.open)d.close()};
 
+const visitedPeople=()=>db.people.filter(p=>p.visits&&p.visits.length);
 // ---- avisos de pendientes
 function avisos(){
   const t=TODAY(),m=addDays(t,1),all=[];
@@ -684,7 +685,7 @@ function render(){
   document.querySelectorAll(".seg button").forEach(b=>b.classList.toggle("on",b.dataset.v===tb));
   const n=A.late.length+A.today.length;$("pc").textContent=n?n:"";
   const f=$("fab");f.innerHTML=ic("plus")+" "+T("Registrar persona visitada");f.hidden=!(view==="vlist"||view==="vsub"||view==="person");
-  if(view==="home")renderHome();else if(view==="visitas")renderVisitas();else if(view==="vlist")renderList();else if(view==="vsub")renderSub();else if(view==="config")renderConfig();else if(view==="eb")renderEb();
+  if(view==="home")renderHome();else if(view==="visitas")renderVisitas();else if(view==="vlist")renderList();else if(view==="vsub")renderSub();else if(view==="config")renderConfig();else if(view==="eb")renderEb();else if(view==="plan")renderPlan();
   else{const p=person(curId);if(p)renderPerson(p);else{view="visitas";renderVisitas()}}
   tr(document.body);fitHero();
 }
@@ -705,7 +706,8 @@ window.addEventListener("resize",()=>{if(view==="home"&&!homeSub)render()});
 function renderVisitas(){
   const A=avisos();
   $("app").innerHTML=heroBtn()+'<div class="menu" style="margin-top:14px">'+
-  mrow("users","Visitas realizadas",db.people.length+" "+T(db.people.length==1?"persona":"personas"),"v","vlist")+
+  mrow("calendar","Planificar visitas",T("Programar y ver tus próximas visitas"),"go","plan",A.all.length)+
+  mrow("users","Visitas realizadas",visitedPeople().length+" "+T(visitedPeople().length==1?"persona":"personas"),"v","vlist")+
   AV.map(([k,lab])=>mrow("calendar",lab,"","v",k,A[k].length)).join("")+'</div>';
   $("heroBtn").onclick=startRegistrar;
 }
@@ -718,8 +720,8 @@ function renderList(){
   $("app").innerHTML=back0()+'<input id="q" type="search" placeholder="Buscar por nombre o código..." value="'+esc(q)+'"><div id="res" style="margin-top:14px"></div>';
   $("q").oninput=e=>{q=e.target.value;fill()};fill();
   function fill(){
-    const R=nmSearch(db.people,q,p=>p.nombre,p=>p.codigo),list=R.main.concat(R.otras),nm=R.main.length;
-    $("res").innerHTML=list.length?list.map((p,i)=>(i===nm&&nm<list.length?'<h3>'+T("Otras coincidencias")+'</h3>':'')+personCard(p)).join(""):'<div class="empty">'+(db.people.length?'Nadie coincide con la búsqueda.':'Aún no hay personas.<br>Toca “Registrar persona visitada” para empezar.')+'</div>';
+    const R=nmSearch(visitedPeople(),q,p=>p.nombre,p=>p.codigo),list=R.main.concat(R.otras),nm=R.main.length;
+    $("res").innerHTML=list.length?list.map((p,i)=>(i===nm&&nm<list.length?'<h3>'+T("Otras coincidencias")+'</h3>':'')+personCard(p)).join(""):'<div class="empty">'+(visitedPeople().length?'Nadie coincide con la búsqueda.':'Aún no hay personas.<br>Toca “Registrar persona visitada” para empezar.')+'</div>';
     tr($("res"));
   }
 }
@@ -757,7 +759,7 @@ function twoTap(b,fn){
 $("app").onclick=e=>{
   const b=e.target.closest("[data-a]");if(!b)return;
   const a=b.dataset.a,id=b.dataset.id,id2=b.dataset.id2,p=person(id||curId),go=b.dataset.go;
-  if(a==="go"){if(go==="rep")openReports();else if(go==="pad")openPad();else if(go==="cov")openCovMenu()}
+  if(a==="go"){if(go==="rep")openReports();else if(go==="pad")openPad();else if(go==="cov")openCovMenu();else if(go==="plan")goView("plan")}
   else if(a==="v"){if(go==="vlist")goView("vlist");else goView("vsub",go)}
   else if(a==="hsub"){homeSub=homeSub===b.dataset.k?null:b.dataset.k;render()}
   else if(a==="cfg"){if(go==="min")openMin();else if(go==="imp")openImp();else if(go==="share")shareApp();else if(go==="about")openDlg("aDlg");else if(go==="qp")openQp();else if(go==="eb")openEb();else if(go==="bk")openBk();else if(go==="pin")openPin()}
@@ -827,7 +829,9 @@ $("delGo").onclick=()=>{
 
 // ---- registrar visita (inicio del proceso)
 function padFree(){const used=new Set(db.people.map(p=>p.padronId).filter(Boolean));return db.padron?db.padron.miembros.filter(m=>!used.has(m.id)):[]}
-function startRegistrar(){$("rvQ").value="";rvFill();openDlg("rvDlg");setTimeout(()=>{try{$("rvQ").focus()}catch(e){}},250)}
+let rvMode="visit";
+function startPlan(){rvMode="plan";$("rvTitle").textContent=T("Programar visita");$("rvQ").value="";rvFill();openDlg("rvDlg");setTimeout(()=>{try{$("rvQ").focus()}catch(e){}},250)}
+function startRegistrar(){rvMode="visit";$("rvTitle").textContent=T("Registrar persona visitada");$("rvQ").value="";rvFill();openDlg("rvDlg");setTimeout(()=>{try{$("rvQ").focus()}catch(e){}},250)}
 function rvFill(){
   const s=$("rvQ").value.trim(),box=$("rvRes");let h="";
   const row=(k,id,nm,sub,tag)=>'<button class="res" data-rk="'+k+'" data-rid="'+esc(id)+'"><span class="av" style="width:38px;height:38px;font-size:14px">'+esc(initials(nm))+'</span><span class="grow"><span class="nm">'+esc(nm)+'</span><div class="sub">'+esc(sub)+'</div></span><span class="tag">'+T(tag)+'</span></button>';
@@ -843,8 +847,9 @@ function rvFill(){
 }
 $("rvQ").oninput=rvFill;
 $("rvClose").onclick=()=>closeDlg("rvDlg");
-$("rvNew").onclick=()=>{const s=$("rvQ").value.trim();closeDlg("rvDlg");openPerson(null);if(s&&!/^\d+$/.test(s))$("p_nombre").value=s;else if(s)$("p_codigo").value=s};
+$("rvNew").onclick=()=>{const s=$("rvQ").value.trim();closeDlg("rvDlg");if(rvMode==="plan"){if(!s){toast("Escribe el nombre de la persona");return}const q={id:uid(),nombre:s,visits:[],pend:[]};db.people.push(q);save();curId=q.id;openNext();return}openPerson(null);if(s&&!/^\d+$/.test(s))$("p_nombre").value=s;else if(s)$("p_codigo").value=s};
 $("rvRes").onclick=e=>{const b=e.target.closest("[data-rk]");if(!b)return;closeDlg("rvDlg");
+  if(rvMode==="plan"){if(b.dataset.rk==="p")curId=b.dataset.rid;else{const m=db.padron.miembros.find(x=>x.id===b.dataset.rid);if(!m)return;const q={id:uid(),nombre:m.nombre,padronId:m.id,codigo:m.codigo||"",iglesia:m.iglesia||"",categoria:"Adventista",visits:[],pend:[]};if(m.fnac)q.fnac=m.fnac;db.people.push(q);save();curId=q.id}openNext();return}
   if(b.dataset.rk==="p"){curId=b.dataset.rid;backTo={view:"vlist",sub:null,tab:"visitas"};view="person";render();window.scrollTo(0,0);openVisit(null)}
   else{const m=db.padron.miembros.find(x=>x.id===b.dataset.rid);openPerson(null);if(m)prefillPm(m)}};
 
@@ -862,9 +867,10 @@ async function shareApp(){
 }
 
 // ---- próxima visita
-function openNext(){const p=person(curId);$("nDate").value="";$("nWhat").value="";$("nHora").innerHTML=horasOpts();$("nHora").value="";$("nDir").value=(p&&p.direccion)||"";openDlg("nDlg")}
+let nEdit=null;
+function openNext(xid){const p=person(curId),x=xid&&p&&p.pend.find(y=>y.id===xid);nEdit=x?x.id:null;$("nTitle").textContent=T(x?"Cambiar visita programada":"Programar próxima visita");$("nWho").textContent=p?p.nombre:"";$("nDate").value=x?x.fecha:"";$("nWhat").value=x?x.accion:"";$("nHora").innerHTML=horasOpts();$("nHora").value=(x&&x.hora)||"";$("nDir").value=x?(x.dir||""):((p&&p.direccion)||"");openDlg("nDlg")}
 $("nCancel").onclick=()=>closeDlg("nDlg");
-$("nSave").onclick=()=>{const p=person(curId);if(!p)return;if(!$("nDate").value){toast("Falta la fecha");return}p.pend.push({id:uid(),fecha:$("nDate").value,hora:$("nHora").value,dir:$("nDir").value.trim(),accion:$("nWhat").value.trim()||"Visita de seguimiento",hecho:false});save();closeDlg("nDlg");render()};
+$("nSave").onclick=()=>{const p=person(curId);if(!p)return;if(!$("nDate").value){toast("Falta la fecha");return}if(nEdit){const x=p.pend.find(y=>y.id===nEdit);if(x){x.fecha=$("nDate").value;x.hora=$("nHora").value;x.dir=$("nDir").value.trim();x.accion=$("nWhat").value.trim()||x.accion}nEdit=null}else p.pend.push({id:uid(),fecha:$("nDate").value,hora:$("nHora").value,dir:$("nDir").value.trim(),accion:$("nWhat").value.trim()||"Visita de seguimiento",hecho:false});save();closeDlg("nDlg");render();toast("Visita programada ✓")};
 
 // ---- ficha
 const fld=f=>{const id='p_'+f[0];let c;
@@ -1202,7 +1208,7 @@ function catalog(NV){
   return C;
 }
 const nextPend=p=>p.pend.filter(x=>!x.hecho).sort((a,b)=>a.fecha.localeCompare(b.fecha))[0];
-const nvMax=()=>Math.min(5,Math.max(1,...db.people.map(p=>p.visits.length)));
+const nvMax=()=>Math.min(5,Math.max(1,...visitedPeople().map(p=>p.visits.length)));
 function personasRows(cols){return db.people.map(p=>cols.map(c=>c.get(p)))}
 async function repCompleto(){
   const NV=nvMax(),cols=catalog(NV),cfg=cfgData();
@@ -1217,7 +1223,7 @@ async function repCompleto(){
   ]},"visitacion-completo-"+TODAY());
 }
 async function repSiervo(){
-  const cfg=cfgData(),ppl=db.people.slice().sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||"","es"));
+  const cfg=cfgData(),ppl=visitedPeople().slice().sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||"","es"));
   const NV=Math.max(1,...ppl.map(p=>p.visits.length));
   const rows=ppl.map(p=>{const f=p.visits.map(v=>v.fecha).sort().map(fmt);const r=[p.codigo||"",p.nombre||"",p.iglesia||"",ageOf(p)===""?"":Number(ageOf(p)),p.visits.length];for(let i=0;i<NV;i++)r.push(f[i]||"");return r});
   const heads=["Código de persona","Nombre","Iglesia","Edad","Visitas pastorales recibidas"].map(h=>T(h));for(let i=1;i<=NV;i++)heads.push(T("Fecha de la visita")+" "+i);
@@ -1237,7 +1243,7 @@ function renderRep(){
   if(repMode==="menu"){
     b.innerHTML=fmtBar()+'<button class="opt" data-r="full" style="margin-top:12px"><span class="mi">'+ic("sheet")+'</span><span><b>Informe completo</b><span>Todas las fichas, el historial de visitas y las pendientes.</span></span></button>'+
     '<button class="opt" data-r="sf"><span class="mi">'+ic("star")+'</span><span><b>Informe de Visitación Siervo Fiel</b><span>Código, nombre, iglesia, edad y visitas pastorales recibidas.</span></span></button>'+
-    '<button class="opt" data-r="custom"><span class="mi">'+ic("cols")+'</span><span><b>Informe a tu medida</b><span>Tú marcas las columnas que quieres incluir.</span></span></button>'+(db.people.length?'':'<div class="note">'+T("Aún no hay datos para exportar")+'</div>');
+    '<button class="opt" data-r="custom"><span class="mi">'+ic("cols")+'</span><span><b>Informe a tu medida</b><span>Tú marcas las columnas que quieres incluir.</span></span></button>'+(visitedPeople().length?'':'<div class="note">'+T("Aún no hay datos para exportar")+'</div>');
   }else{
     const all=catalog(nvMax()),sel=new Set(db.repCols||["nombre","codigo","iglesia","fnac","nvis","ult"]),groups=[];
     all.forEach(c=>{if(c.vg){if(!groups.find(g=>g[0]==="Detalle de las visitas"))groups.push(["Detalle de las visitas",[{id:"vgrp",label:T("Visitas 1 a 5 (fecha, hora, tipo, quién me acompañó, atención, observaciones, asignación)")}]]);return}let g=groups.find(x=>x[0]===c.g);if(!g){g=[c.g,[]];groups.push(g)}g[1].push(c)});
@@ -1250,13 +1256,13 @@ $("repBody").onclick=async e=>{
   const o=e.target.closest("[data-r]");
   if(o){const r=o.dataset.r;
     if(r==="custom"){repMode="custom";renderRep();return}
-    if(!db.people.length){toast("Aún no hay datos para exportar");return}
+    if(!visitedPeople().length){toast("Aún no hay datos para exportar");return}
     await withBusy(()=>r==="full"?repCompleto():repSiervo());return}
   if(e.target.closest("#repAll"))document.querySelectorAll(".rc").forEach(c=>c.checked=true);
   else if(e.target.closest("#repNone"))document.querySelectorAll(".rc").forEach(c=>c.checked=false);
   else if(e.target.closest("#repBack")){repMode="menu";renderRep()}
 };
-$("repGo").onclick=async()=>{if(!db.people.length){toast("Aún no hay datos para exportar");return}const ids=[...document.querySelectorAll(".rc:checked")].map(c=>c.value);db.repCols=ids;save();await withBusy(()=>repMedida(ids))};
+$("repGo").onclick=async()=>{if(!visitedPeople().length){toast("Aún no hay datos para exportar");return}const ids=[...document.querySelectorAll(".rc:checked")].map(c=>c.value);db.repCols=ids;save();await withBusy(()=>repMedida(ids))};
 $("repClose").onclick=()=>closeDlg("repDlg");
 
 // ---- informe de feligresía ACMS: solo código, nombre, iglesia, estado, fecha de nacimiento y de bautismo
@@ -1974,6 +1980,26 @@ function askDelPerson(pid){
   $("delCancel").textContent=T("No, dejarla");openDlg("delDlg");
 }
 $("delDlg").addEventListener("close",()=>{$("delCancel").textContent=T("Cancelar")});
+
+// ---- v1.2: planificar visitas
+function renderPlan(){
+  const A=avisos(),t=TODAY(),m=addDays(t,1);
+  const hk=x=>{const h=typeof hrParse==="function"?hrParse(x.hora):null;return h==null?99:h};
+  const L=A.all.slice().sort((a,b)=>a.x.fecha.localeCompare(b.x.fecha)||hk(a.x)-hk(b.x));
+  const lab=d=>d<t?T("Atrasadas"):d===t?T("Hoy"):d===m?T("Mañana"):(()=>{const [y,mo,da]=d.split("-").map(Number);const s=new Date(y,mo-1,da).toLocaleDateString(LANG==="en"?"en":LANG==="fr"?"fr":"es",{weekday:"long"});return s.charAt(0).toUpperCase()+s.slice(1)+" "+fmt(d).slice(0,5)})();
+  const card=({p,x})=>{const late=x.fecha<t,tel=(p.telefono||"").replace(/\D/g,"");
+    return '<div class="card"><div class="'+(late?'late':'sub')+'">'+(late?T('⚠ Atrasada · ')+fmt(x.fecha)+' · ':'')+(x.hora?esc(x.hora):T("Sin hora"))+'</div><div class="nm" style="margin-top:2px">'+esc(p.nombre)+'</div><div class="sub">'+esc(x.accion)+'</div>'+((x.dir||p.direccion)?'<div class="sub">📍 '+esc(x.dir||p.direccion)+'</div>':'')+
+    '<div class="acts"><button class="pri" data-a="donep" data-id="'+p.id+'" data-id2="'+x.id+'">'+ic("check")+T("Marcar como hecha")+'</button></div>'+
+    '<div class="acts" style="margin-top:8px;flex-wrap:wrap"><button class="sm" style="flex:1 1 28%" data-a="editn" data-id="'+p.id+'" data-id2="'+x.id+'">'+T("Cambiar")+'</button><button class="sm" style="flex:1 1 28%" data-a="open" data-id="'+p.id+'">'+T("Abrir ficha")+'</button><button class="sm dng" style="flex:0 0 48px" data-a="delpend" data-id="'+p.id+'" data-id2="'+x.id+'" data-t="Quitar" aria-label="Quitar">'+ic("trash")+'</button></div><div class="acts" style="margin-top:8px"><button class="sm" style="flex:1" data-a="cal" data-id="'+p.id+'" data-id2="'+x.id+'">'+ic("calendar")+T("Calendario")+'</button><button class="sm" style="flex:1" data-a="ics" data-id="'+p.id+'" data-id2="'+x.id+'">'+ic("download")+'.ics</button></div></div>'};
+  let h=back0("Visitas")+'<h3 style="margin:6px 0 10px;font-size:18px">'+T("Planificar visitas")+'</h3><button class="pri" data-a="plnew" style="width:100%">'+ic("plus")+" "+T("Programar visita")+'</button>';
+  if(!L.length)h+='<div class="empty" style="margin-top:14px">'+T("No hay visitas programadas.")+'</div>';
+  else{let last=null;L.forEach(it=>{const k=it.x.fecha<t?"late":it.x.fecha;if(k!==last){h+='<h3 class="hr" style="margin-top:16px">'+esc(lab(it.x.fecha))+'<span class="cn" style="font-size:12px;font-weight:600;color:var(--mut)">'+L.filter(o=>(o.x.fecha<t?"late":o.x.fecha)===k).length+'</span></h3>';last=k}h+=card(it)});
+    h+='<button class="sm" data-a="icsall" style="width:100%;margin-top:14px">'+ic("download")+" "+T("Agregar todas al calendario (.ics)")+'</button>'}
+  $("app").innerHTML=h;
+}
+$("app").addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b)return;const a=b.dataset.a;
+  if(a==="plnew")startPlan();
+  else if(a==="editn"){curId=b.dataset.id;openNext(b.dataset.id2)}});
 
 $("bClose").onclick=()=>$("bDlg").close();
 
@@ -2750,6 +2776,16 @@ Menos de 25 %|Under 25%|Moins de 25 %
 Al menos 25 %|At least 25%|Au moins 25 %
 Al menos 50 %|At least 50%|Au moins 50 %
 Al menos 75 %|At least 75%|Au moins 75 %
+Planificar visitas|Plan visits|Planifier les visites
+Programar y ver tus próximas visitas|Schedule and view your upcoming visits|Programmer et voir vos prochaines visites
+Programar visita|Schedule a visit|Programmer une visite
+Cambiar|Change|Modifier
+Cambiar visita programada|Change scheduled visit|Modifier la visite programmée
+Sin hora|No time set|Sans heure
+No hay visitas programadas.|No visits scheduled.|Aucune visite programmée.
+Agregar todas al calendario (.ics)|Add all to calendar (.ics)|Tout ajouter au calendrier (.ics)
+Escribe el nombre de la persona|Type the person's name|Écrivez le nom de la personne
+Visita programada ✓|Visit scheduled ✓|Visite programmée ✓
 `.split("\n").forEach(l=>{const a=l.split("|");if(a.length>2)D[a[0]]={en:a[1],fr:a[2]}});
 const T=s=>LANG==="es"||!D[s]?s:D[s][LANG];
 function tr(root){
