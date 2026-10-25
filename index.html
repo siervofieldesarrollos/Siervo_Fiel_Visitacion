@@ -292,6 +292,9 @@ dialog .bd{flex:1 1 auto;min-height:0}
 #plBar .pb svg{width:19px;height:19px}#plBar .pb.on{background:var(--ac);color:#fff;border-color:var(--ac)}#plBar .pb.dng.on{background:var(--bad);border-color:var(--bad);color:#fff}
 #plBar .pb.off{opacity:.38;background:var(--sf);color:var(--mut)}
 
+.plt tr.pld td{position:sticky;top:31px;z-index:2}
+.plt .pi{min-width:110px}.plt .pl{min-width:170px}
+
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#173022">
@@ -471,7 +474,7 @@ dialog .bd{flex:1 1 auto;min-height:0}
 </dialog>
 
 <dialog id="vDlg">
-  <div class="hd"><h2 id="vTitle">Registrar visita</h2><div class="sub" id="vWho"></div></div>
+  <div class="hd"><h2 id="vTitle">Registrar visita</h2><div class="sub" id="vWho"></div><button type="button" class="sm" id="vFicha" style="margin-top:8px">Editar ficha</button></div>
   <div class="bd">
     <div class="row"><div><label>Fecha</label><input id="vDate" type="date"></div><div><label>Hora</label><select id="vHora"></select></div></div><label>Tipo de visita</label><select id="vTipo"></select>
     <label>Me acompañó</label><input id="vAc" autocomplete="off" placeholder="Nombre (opcional)">
@@ -574,7 +577,7 @@ const fmt=s=>s?s.split("-").reverse().join("/"):"";
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const TODAY=()=>iso(new Date());
 const addDays=(s,n)=>{const [y,m,d]=s.split("-").map(Number);const t=new Date(y,m-1,d+n);return iso(t)};
-const APP_VER="1.6";
+const APP_VER="1.7";
 const APP_URL=location.href.split("#")[0].split("?")[0].replace(/index\.html$/,"");
 const ESTADOS=["Activo","Inactivo","En otra IASD","Disciplinado","Apostasía","Desfraternizado","Paradero desconocido","Difunto"];
 const EST=["Testificador/a","Instructor/a Bíblico/a","Evangelista","Instructor/a laico"];
@@ -810,7 +813,7 @@ $("fab").onclick=()=>{if(view==="person")openVisit(null);else startRegistrar()};
 function askDone(pid,xid){const p=person(pid),x=p.pend.find(y=>y.id===xid);doneRef={pid,xid};$("doneSub").textContent=p.nombre+" · "+fmt(x.fecha)+" · "+x.accion;openDlg("doneDlg")}
 $("doneCancel").onclick=()=>closeDlg("doneDlg");
 $("doneOnly").onclick=()=>{const p=person(doneRef.pid),x=p&&p.pend.find(y=>y.id===doneRef.xid);if(x){x.hecho=true;save()}closeDlg("doneDlg");doneRef=null;render()};
-$("doneVis").onclick=()=>{const p=person(doneRef.pid),x=p&&p.pend.find(y=>y.id===doneRef.xid);closeDlg("doneDlg");if(!p)return;curId=p.id;if(view!=="person"){backTo={view,sub,tab:tabOf()};view="person"}render();openVisit(null,x)};
+$("doneVis").onclick=()=>{const p=person(doneRef.pid),x=p&&p.pend.find(y=>y.id===doneRef.xid);closeDlg("doneDlg");if(!p)return;curId=p.id;if(view!=="person"){backTo={view,sub,tab:tabOf()};view="person"}render();if(!p.visits.length)openPerson(p,x);else openVisit(null,x)};
 
 // ---- eliminar visita / persona (menú "Más opciones")
 let delSt=null;
@@ -931,8 +934,10 @@ function igSel(){const sl=$("p_iglesiaSel"),inp=$("p_iglesia");if(sl.value==="__
 function updAge(){const f=$("p_fnac").value,e=$("p_edad");if(f){e.value=ageOf({fnac:f});e.readOnly=true}else e.readOnly=false}
 $("pfBody").addEventListener("change",e=>{const t=e.target;if(t.id==="p_fnac"||t.id==="p_estSel"||t.id==="p_categoria")updPInfo();if(t.classList.contains("obCk"))updObra();if(t.id==="p_iglesiaSel")igSel();if(t.id==="p_fnac")updAge()});
 $("pfBody").addEventListener("input",e=>{if(e.target.id==="p_fnac"){updAge();updPInfo()}if(e.target.id==="p_nombre")updNmSug()});
-function openPerson(p){
-  editPid=p?p.id:null;$("pTitle").textContent=T(p?"Editar ficha":"Nueva persona");$("aiText").value="";$("aiPhoto").value="";$("aiMsg").textContent="";$("aiBox").open=false;$("aiBox").style.display=window.claude?"":"none";
+let ficPend=null;
+function openPerson(p,pendX){
+  ficPend=(p&&pendX&&!p.visits.length)?pendX.id:null;
+  editPid=p?p.id:null;$("pTitle").textContent=T(ficPend?"Registrar visita realizada":p?"Editar ficha":"Nueva persona");$("aiText").value="";$("aiPhoto").value="";$("aiMsg").textContent="";$("aiBox").open=false;$("aiBox").style.display=window.claude?"":"none";
   ALLF.forEach(f=>{const el=$("p_"+f[0]),v=p&&p[f[0]]!=null?p[f[0]]:"";if(el.tagName==="SELECT"&&v&&![...el.options].some(o=>o.value===v)){const o=document.createElement("option");o.textContent=v;o.value=v;el.appendChild(o)}el.value=v});
   if(!p&&db.people.length){const l=db.people[db.people.length-1];["iglesia","distrito","mision","pastor"].forEach(k=>{$("p_"+k).value=l[k]||""})}
   $("pfBody").querySelectorAll(".estCk").forEach(c=>c.checked=!!(p&&p.est&&p.est.includes(c.value)));
@@ -941,6 +946,7 @@ function openPerson(p){
   $("p_fnac").max=TODAY();$("f_vfecha").max=TODAY();
   const v0=p&&p.visits[0];
   $("f_vfecha").value=v0?v0.fecha:(p?"":TODAY());$("f_vhora").value=(v0&&v0.hora)||"";$("f_vtipo").value=v0?v0.tipo:TIPOS[0];$("f_vat").value=v0?(v0.atencion||""):"";$("f_vate").innerHTML=atnOpts();$("f_vate").value=(v0&&v0.ate)||"";$("f_vac").value=v0?(v0.acomp||""):"";
+  if(ficPend){$("f_vfecha").value=TODAY();$("f_vhora").value=pendX.hora||"";$("f_vat").value=pendX.accion||""}
   curPm=(p&&p.padronId)||null;fnacRech=(p&&p.fnacRech)||"";const es=p?estOf(p):{e:"",nota:""};$("p_estSel").value=es.e||"";$("p_estNota").value=es.nota||"";$("nmSug").innerHTML="";updPInfo();
   openDlg("pDlg");$("pfBody").parentNode.scrollTop=0;
 }
@@ -960,6 +966,7 @@ $("pSave").onclick=()=>{
   let p=editPid?person(editPid):null;
   if(p){Object.assign(p,d);const v0=p.visits[0];if(v0){if(vd.fecha)Object.assign(v0,vd)}else if(vd.fecha)p.visits.push(Object.assign({id:uid(),obs:"",asig:""},vd))}
   else{p=Object.assign({id:uid(),visits:[Object.assign({id:uid(),obs:"",asig:""},vd,{fecha:vd.fecha||TODAY(),atencion:vd.atencion||"Primera visita: se llenó la ficha."})],pend:[]},d);db.people.push(p)}
+  if(ficPend&&p.visits.length){const x=p.pend.find(y=>y.id===ficPend);if(x){x.hecho=true;if(x.dir)p.visits[p.visits.length-1].dir=x.dir}}ficPend=null;
   setEst(p,evv,env);if(fnacRech)p.fnacRech=fnacRech;else delete p.fnacRech;
   save();closeDlg("pDlg");
   if(!editPid){curId=p.id;backTo={view:"vlist",sub:null,tab:"visitas"};view="person"}
@@ -2016,12 +2023,13 @@ function renderPlan(){
   let h=back0("Visitas")+'<div class="plh"><h3>'+T("Planificar visitas")+'</h3><button class="pri sm" data-a="plnew">'+ic("plus")+" "+T("Programar visita")+'</button></div>';
   if(!L.length)h+='<div class="empty" style="margin-top:14px">'+T("No hay visitas programadas.")+'</div>';
   else{
-    h+='<div class="plw"><table class="plt"><thead><tr><th class="pc"></th><th class="pn">'+T("Nombre")+'</th><th class="ph">'+T("Hora")+'</th><th class="pa">'+T("De qué se trata")+'</th><th class="pl">'+T("Lugar")+'</th></tr></thead><tbody>';
-    let last=null;
+    h+='<div class="plw"><table class="plt"><thead><tr><th class="pc"></th><th class="pn">'+T("Nombre")+'</th><th class="pi">'+T("Iglesia")+'</th><th class="ph">'+T("Hora")+'</th><th class="pl">'+T("Dirección")+'</th><th class="pa">'+T("De qué se trata")+'</th></tr></thead>';
+    let last=null,open=false;
     L.forEach(({p,x})=>{const k=x.fecha<t?"late":x.fecha,late=x.fecha<t,key=p.id+"|"+x.id;
-      if(k!==last){h+='<tr class="pld"><td colspan="5"><div>'+esc(lab(x.fecha))+'<span class="cn">'+L.filter(o=>(o.x.fecha<t?"late":o.x.fecha)===k).length+'</span></div></td></tr>';last=k}
-      h+='<tr class="plr'+(plSel.has(key)?" on":"")+'" data-k="'+esc(key)+'"><td class="pc"><input type="checkbox" '+(plSel.has(key)?"checked":"")+' aria-label="'+esc(p.nombre)+'"></td><td class="pn">'+esc(shortName(p.nombre))+'</td><td class="ph'+(late?" late":"")+'">'+(late?"⚠ "+fmt(x.fecha).slice(0,5)+" · ":"")+(x.hora?esc(x.hora):"—")+'</td><td class="pa">'+esc(x.accion)+'</td><td class="pl">'+esc(x.dir||p.direccion||"—")+'</td></tr>'});
-    h+='</tbody></table></div>'}
+      if(k!==last){if(open)h+='</tbody>';h+='<tbody><tr class="pld"><td colspan="6"><div>'+esc(lab(x.fecha))+'<span class="cn">'+L.filter(o=>(o.x.fecha<t?"late":o.x.fecha)===k).length+'</span></div></td></tr>';last=k;open=true}
+      h+='<tr class="plr'+(plSel.has(key)?" on":"")+'" data-k="'+esc(key)+'"><td class="pc"><input type="checkbox" '+(plSel.has(key)?"checked":"")+' aria-label="'+esc(p.nombre)+'"></td><td class="pn">'+esc(shortName(p.nombre))+'</td><td class="pi">'+esc(p.iglesia||"—")+'</td><td class="ph'+(late?" late":"")+'">'+(late?"⚠ "+fmt(x.fecha).slice(0,5)+" · ":"")+(x.hora?esc(x.hora):"—")+'</td><td class="pl">'+esc(x.dir||p.direccion||"—")+'</td><td class="pa">'+esc(x.accion)+'</td></tr>'});
+    if(open)h+='</tbody>';
+    h+='</table></div>'}
   $("app").innerHTML=h;plBar();
   const w=$("app").querySelector(".plw");if(w){w.onclick=e=>{const tr=e.target.closest(".plr");if(!tr)return;const k=tr.dataset.k;plSel.has(k)?plSel.delete(k):plSel.add(k);tr.classList.toggle("on",plSel.has(k));tr.querySelector("input").checked=plSel.has(k);plBar()}}
 }
@@ -2056,6 +2064,17 @@ document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest
 $("app").addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b)return;const a=b.dataset.a;
   if(a==="plnew")startPlan();
   else if(a==="editn"){curId=b.dataset.id;openNext(b.dataset.id2)}});
+
+// ---- v1.7: Editar ficha desde el formulario corto de la visita (conserva lo escrito)
+let vBack=null;
+const V_IDS=["vDate","vHora","vTipo","vAte","vAt","vAc","vOb","vAs","vNd","vNh","vNdir","vNw"];
+$("vFicha").onclick=()=>{const p=person(curId);if(!p)return;
+  vBack={eid:editVid,pend:vDonePend,open:$("vNext").open,vals:V_IDS.map(i=>[i,$(i).value])};
+  closeDlg("vDlg");openPerson(p)};
+$("pDlg").addEventListener("close",()=>{if(!vBack)return;const d=vBack;vBack=null;const p=person(curId);if(!p)return;
+  const v=d.eid&&p.visits.find(x=>x.id===d.eid),px=d.pend&&p.pend.find(y=>y.id===d.pend);
+  openVisit(v||null,px||undefined);
+  d.vals.forEach(([i,val])=>{$(i).value=val});vDonePend=d.pend||null;$("vNext").open=d.open});
 
 $("bClose").onclick=()=>$("bDlg").close();
 
