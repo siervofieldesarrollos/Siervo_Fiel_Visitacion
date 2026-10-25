@@ -272,6 +272,9 @@ dialog .bd{flex:1 1 auto;min-height:0}
 
 .ebs{margin:10px 0}.ebs button{font-size:13px}.ebg{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}.ebg .cn{font-size:12px;font-weight:600;color:var(--mut)}
 
+.card.pl{padding:10px 12px;margin-bottom:8px}.pl1{font-size:15px;line-height:1.35}.pl1 .sub{font-size:14px}.pl1 .late{color:var(--bad)}
+.pl2{display:flex;gap:6px;margin-top:8px}.pb{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;font-size:11px;font-weight:600;min-height:0;border-radius:10px;line-height:1.1}.pb svg{width:18px;height:18px}.pb.ok{background:var(--ac);color:#fff;border-color:var(--ac)}.pb.dng{color:var(--bad)}
+
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#173022">
@@ -553,7 +556,7 @@ const fmt=s=>s?s.split("-").reverse().join("/"):"";
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const TODAY=()=>iso(new Date());
 const addDays=(s,n)=>{const [y,m,d]=s.split("-").map(Number);const t=new Date(y,m-1,d+n);return iso(t)};
-const APP_VER="1.3";
+const APP_VER="1.4";
 const APP_URL=location.href.split("#")[0].split("?")[0].replace(/index\.html$/,"");
 const ESTADOS=["Activo","Inactivo","En otra IASD","Disciplinado","Apostasía","Desfraternizado","Paradero desconocido","Difunto"];
 const EST=["Testificador/a","Instructor/a Bíblico/a","Evangelista","Instructor/a laico"];
@@ -706,7 +709,7 @@ window.addEventListener("resize",()=>{if(view==="home"&&!homeSub)render()});
 function renderVisitas(){
   const A=avisos();
   $("app").innerHTML=heroBtn()+'<div class="menu" style="margin-top:14px">'+
-  mrow("calendar","Planificar visitas",T("Programar y ver tus próximas visitas"),"go","plan",A.all.length)+
+  mrow("calendar","Planificar visitas",T("Programar y ver tus visitas"),"go","plan",A.all.length)+
   mrow("users","Visitas realizadas",visitedPeople().length+" "+T(visitedPeople().length==1?"persona":"personas"),"v","vlist")+
   AV.map(([k,lab])=>mrow("calendar",lab,"","v",k,A[k].length)).join("")+'</div>';
   $("heroBtn").onclick=startRegistrar;
@@ -1987,10 +1990,10 @@ function renderPlan(){
   const hk=x=>{const h=typeof hrParse==="function"?hrParse(x.hora):null;return h==null?99:h};
   const L=A.all.slice().sort((a,b)=>a.x.fecha.localeCompare(b.x.fecha)||hk(a.x)-hk(b.x));
   const lab=d=>d<t?T("Atrasadas"):d===t?T("Hoy"):d===m?T("Mañana"):(()=>{const [y,mo,da]=d.split("-").map(Number);const s=new Date(y,mo-1,da).toLocaleDateString(LANG==="en"?"en":LANG==="fr"?"fr":"es",{weekday:"long"});return s.charAt(0).toUpperCase()+s.slice(1)+" "+fmt(d).slice(0,5)})();
-  const card=({p,x})=>{const late=x.fecha<t,tel=(p.telefono||"").replace(/\D/g,"");
-    return '<div class="card"><div class="'+(late?'late':'sub')+'">'+(late?T('⚠ Atrasada · ')+fmt(x.fecha)+' · ':'')+(x.hora?esc(x.hora):T("Sin hora"))+'</div><div class="nm" style="margin-top:2px">'+esc(p.nombre)+'</div><div class="sub">'+esc(x.accion)+'</div>'+((x.dir||p.direccion)?'<div class="sub">📍 '+esc(x.dir||p.direccion)+'</div>':'')+
-    '<div class="acts"><button class="pri" data-a="donep" data-id="'+p.id+'" data-id2="'+x.id+'">'+ic("check")+T("Marcar como hecha")+'</button></div>'+
-    '<div class="acts" style="margin-top:8px;flex-wrap:wrap"><button class="sm" style="flex:1 1 28%" data-a="editn" data-id="'+p.id+'" data-id2="'+x.id+'">'+T("Cambiar")+'</button><button class="sm" style="flex:1 1 28%" data-a="open" data-id="'+p.id+'">'+T("Abrir ficha")+'</button><button class="sm dng" style="flex:0 0 48px" data-a="delpend" data-id="'+p.id+'" data-id2="'+x.id+'" data-t="Quitar" aria-label="Quitar">'+ic("trash")+'</button></div><div class="acts" style="margin-top:8px"><button class="sm" style="flex:1" data-a="cal" data-id="'+p.id+'" data-id2="'+x.id+'">'+ic("calendar")+T("Calendario")+'</button><button class="sm" style="flex:1" data-a="ics" data-id="'+p.id+'" data-id2="'+x.id+'">'+ic("download")+'.ics</button></div></div>'};
+  const bt=(a2,p,x,ico,lab,cls)=>'<button class="pb'+(cls?' '+cls:'')+'" data-a="'+a2+'" data-id="'+p.id+'" data-id2="'+x.id+'"'+(a2==="delpend"?' data-t="Quitar"':'')+' aria-label="'+esc(T(lab))+'">'+ic(ico)+'<span>'+T(lab)+'</span></button>';
+  const card=({p,x})=>{const late=x.fecha<t;
+    return '<div class="card pl"><div class="pl1"><b class="'+(late?'late':'')+'">'+(late?'⚠ '+fmt(x.fecha).slice(0,5)+' · ':'')+(x.hora?esc(x.hora):T("Sin hora"))+'</b> · <b>'+esc(p.nombre)+'</b><span class="sub"> — '+esc(x.accion)+((x.dir||p.direccion)?' · 📍 '+esc(x.dir||p.direccion):'')+'</span></div>'+
+    '<div class="pl2">'+bt("donep",p,x,"check","Hecha","ok")+bt("editn",p,x,"edit","Cambiar")+bt("open",p,x,"users","Ficha")+bt("cal",p,x,"calendar","Calendario")+bt("ics",p,x,"download",".ics")+bt("delpend",p,x,"trash","Quitar","dng")+'</div></div>'};
   let h=back0("Visitas")+'<h3 style="margin:6px 0 10px;font-size:18px">'+T("Planificar visitas")+'</h3><button class="pri" data-a="plnew" style="width:100%">'+ic("plus")+" "+T("Programar visita")+'</button>';
   if(!L.length)h+='<div class="empty" style="margin-top:14px">'+T("No hay visitas programadas.")+'</div>';
   else{let last=null;L.forEach(it=>{const k=it.x.fecha<t?"late":it.x.fecha;if(k!==last){h+='<h3 class="hr" style="margin-top:16px">'+esc(lab(it.x.fecha))+'<span class="cn" style="font-size:12px;font-weight:600;color:var(--mut)">'+L.filter(o=>(o.x.fecha<t?"late":o.x.fecha)===k).length+'</span></h3>';last=k}h+=card(it)});
@@ -2777,7 +2780,7 @@ Al menos 25 %|At least 25%|Au moins 25 %
 Al menos 50 %|At least 50%|Au moins 50 %
 Al menos 75 %|At least 75%|Au moins 75 %
 Planificar visitas|Plan visits|Planifier les visites
-Programar y ver tus próximas visitas|Schedule and view your upcoming visits|Programmer et voir vos prochaines visites
+Programar y ver tus visitas|Schedule and view your visits|Programmer et voir vos visites
 Programar visita|Schedule a visit|Programmer une visite
 Cambiar|Change|Modifier
 Cambiar visita programada|Change scheduled visit|Modifier la visite programmée
@@ -2786,6 +2789,8 @@ No hay visitas programadas.|No visits scheduled.|Aucune visite programmée.
 Agregar todas al calendario (.ics)|Add all to calendar (.ics)|Tout ajouter au calendrier (.ics)
 Escribe el nombre de la persona|Type the person's name|Écrivez le nom de la personne
 Visita programada ✓|Visit scheduled ✓|Visite programmée ✓
+Hecha|Done|Fait
+Ficha|Record|Fiche
 `.split("\n").forEach(l=>{const a=l.split("|");if(a.length>2)D[a[0]]={en:a[1],fr:a[2]}});
 const T=s=>LANG==="es"||!D[s]?s:D[s][LANG];
 function tr(root){
