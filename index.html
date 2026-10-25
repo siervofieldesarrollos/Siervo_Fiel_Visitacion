@@ -275,6 +275,23 @@ dialog .bd{flex:1 1 auto;min-height:0}
 .card.pl{padding:10px 12px;margin-bottom:8px}.pl1{font-size:15px;line-height:1.35}.pl1 .sub{font-size:14px}.pl1 .late{color:var(--bad)}
 .pl2{display:flex;gap:6px;margin-top:8px}.pb{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;font-size:11px;font-weight:600;min-height:0;border-radius:10px;line-height:1.1}.pb svg{width:18px;height:18px}.pb.ok{background:var(--ac);color:#fff;border-color:var(--ac)}.pb.dng{color:var(--bad)}
 
+.plh{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 8px}.plh h3{margin:0;font-size:18px}
+.plw{overflow:auto;max-height:calc(100dvh - 400px);min-height:200px;background:var(--sf);border:1px solid var(--bd);border-radius:12px}
+.plt{border-collapse:separate;border-spacing:0;font-size:14px;width:max-content;min-width:100%}
+.plt th{position:sticky;top:0;z-index:3;background:var(--ac);color:#fff;font-size:12px;padding:7px 8px;text-align:left;white-space:nowrap}
+.plt td{padding:9px 8px;white-space:nowrap;border-bottom:1px solid var(--bd);background:var(--sf)}
+.plt .pc{position:sticky;left:0;z-index:2;width:36px;min-width:36px;padding:0;text-align:center}.plt th.pc{z-index:4}
+.plt .pn{position:sticky;left:36px;z-index:2;width:84px;min-width:84px;max-width:84px;overflow:hidden;text-overflow:ellipsis;font-weight:700;box-shadow:2px 0 0 var(--bd)}.plt th.pn{z-index:4}
+.plt .ph{min-width:78px}.plt .pa{min-width:230px}.plt .pl{min-width:150px}.plt .late{color:var(--bad);font-weight:700}
+.plt tr.plr{cursor:pointer}.plt tr.plr.on td{background:#dcebe1}
+.plt input[type=checkbox]{width:20px;height:20px;accent-color:var(--ac);margin:0;vertical-align:middle}
+.plt tr.pld td{padding:0;background:var(--bg);border-bottom:1px solid var(--bd)}.plt tr.pld div{position:sticky;left:0;width:calc(100vw - 34px);max-width:560px;padding:8px 10px;font-weight:700;color:var(--mut);display:flex;justify-content:space-between}
+#plBar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(48px + env(safe-area-inset-bottom,0px));width:min(100%,600px);display:flex;gap:6px;padding:8px 10px;background:var(--sf);border-top:1px solid var(--bd);box-shadow:0 -4px 14px rgba(0,0,0,.08);z-index:20}
+#plBar[hidden]{display:none}
+#plBar .pb{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 2px;font-size:11px;font-weight:600;min-height:0;border-radius:10px;line-height:1.1}
+#plBar .pb svg{width:19px;height:19px}#plBar .pb.on{background:var(--ac);color:#fff;border-color:var(--ac)}#plBar .pb.dng.on{background:var(--bad);border-color:var(--bad);color:#fff}
+#plBar .pb.off{opacity:.38;background:var(--sf);color:var(--mut)}
+
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#173022">
@@ -287,6 +304,7 @@ dialog .bd{flex:1 1 auto;min-height:0}
 <main id="app"></main>
 <footer id="ft">Desarrollado por el Pr. Kendell Ferguson Simpson</footer>
 <button class="pri fab" id="fab"></button>
+<div id="plBar" hidden></div>
 <div id="toast"><span id="toastT"></span><button id="toastB" hidden></button></div>
 
 <dialog id="rvDlg">
@@ -424,7 +442,7 @@ dialog .bd{flex:1 1 auto;min-height:0}
 
 <dialog id="doneDlg">
   <div class="hd"><h2>Marcar como hecha</h2><div class="sub" id="doneSub"></div></div>
-  <div class="bd"><button class="opt pri" id="doneVis" style="margin-top:14px"><span class="mi" style="background:rgba(255,255,255,.18);color:inherit"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v3H9zM9 14l2 2 4-4"/></svg></span><span><b>Registrar visita realizada</b><span style="color:inherit;opacity:.85">Abre el formulario con la fecha de hoy y guarda la visita.</span></span></button><button class="opt" id="doneOnly"><span class="mi"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span><b>Solo marcar como hecha</b><span>No crea ninguna visita.</span></span></button></div>
+  <div class="bd"><button class="opt pri" id="doneVis" style="margin-top:14px"><span class="mi" style="background:rgba(255,255,255,.18);color:inherit"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v3H9zM9 14l2 2 4-4"/></svg></span><span><b>Registrar visita realizada</b><span style="color:inherit;opacity:.85">Abre el formulario con la fecha de hoy y guarda la visita.</span></span></button><button class="opt" id="doneOnly"><span class="mi"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span><b>Cerrar sin registrar visita</b><span>La saca de la agenda. No se guarda en el historial ni cuenta como visita.</span></span></button></div>
   <div class="ft"><button id="doneCancel">Cancelar</button></div>
 </dialog>
 
@@ -556,7 +574,7 @@ const fmt=s=>s?s.split("-").reverse().join("/"):"";
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const TODAY=()=>iso(new Date());
 const addDays=(s,n)=>{const [y,m,d]=s.split("-").map(Number);const t=new Date(y,m-1,d+n);return iso(t)};
-const APP_VER="1.4";
+const APP_VER="1.6";
 const APP_URL=location.href.split("#")[0].split("?")[0].replace(/index\.html$/,"");
 const ESTADOS=["Activo","Inactivo","En otra IASD","Disciplinado","Apostasía","Desfraternizado","Paradero desconocido","Difunto"];
 const EST=["Testificador/a","Instructor/a Bíblico/a","Evangelista","Instructor/a laico"];
@@ -684,6 +702,7 @@ const tabOf=()=>view==="person"?((backTo&&backTo.tab)||"visitas"):view==="home"?
 function goView(v,s){view=v;sub=s||null;render();window.scrollTo(0,0)}
 function render(){
   const tb=tabOf(),A=avisos();
+  {const pb=$("plBar");if(pb)pb.hidden=view!=="plan"}
   $("app").classList.remove("hm");$("app").style.minHeight="";$("app").style.paddingBottom="";document.body.classList.remove("hmv");
   document.querySelectorAll(".seg button").forEach(b=>b.classList.toggle("on",b.dataset.v===tb));
   const n=A.late.length+A.today.length;$("pc").textContent=n?n:"";
@@ -818,6 +837,7 @@ $("delBody").onclick=e=>{const b=e.target.closest("[data-dv]");if(!b||!delSt)ret
 $("delCancel").onclick=()=>{closeDlg("delDlg");delSt=null};
 $("delGo").onclick=()=>{
   if(!delSt)return;
+  if(delSt.mode==="plandone"||delSt.mode==="plandel"){plDo(delSt.mode);delSt=null;return}
   if(delSt.mode==="padfile"){padDoFile();delSt=null;return}
   if(delSt.mode==="padall"){padDoAll();delSt=null;return}
   if(delSt.mode==="nvi"){nviDo();delSt=null;return}
@@ -1984,22 +2004,55 @@ function askDelPerson(pid){
 }
 $("delDlg").addEventListener("close",()=>{$("delCancel").textContent=T("Cancelar")});
 
-// ---- v1.2: planificar visitas
+// ---- planificar visitas (lista de una línea, casillas y barra de acciones)
+let plSel=new Set();
+function shortName(n){const w=String(n||"").trim().split(/\s+/),s=w.slice(1).find(x=>x.length>2&&!/^(de|del|la|los|las|y)$/i.test(x));return w[0]+(s?" "+s[0].toUpperCase()+".":"")}
+function plItems(){const A=avisos(),hk=x=>{const h=typeof hrParse==="function"?hrParse(x.hora):null;return h==null?99:h};
+  return A.all.slice().sort((a,b)=>a.x.fecha.localeCompare(b.x.fecha)||hk(a.x)-hk(b.x))}
 function renderPlan(){
-  const A=avisos(),t=TODAY(),m=addDays(t,1);
-  const hk=x=>{const h=typeof hrParse==="function"?hrParse(x.hora):null;return h==null?99:h};
-  const L=A.all.slice().sort((a,b)=>a.x.fecha.localeCompare(b.x.fecha)||hk(a.x)-hk(b.x));
+  const t=TODAY(),m=addDays(t,1),L=plItems();
+  const ok=new Set(L.map(i=>i.p.id+"|"+i.x.id));plSel=new Set([...plSel].filter(k=>ok.has(k)));
   const lab=d=>d<t?T("Atrasadas"):d===t?T("Hoy"):d===m?T("Mañana"):(()=>{const [y,mo,da]=d.split("-").map(Number);const s=new Date(y,mo-1,da).toLocaleDateString(LANG==="en"?"en":LANG==="fr"?"fr":"es",{weekday:"long"});return s.charAt(0).toUpperCase()+s.slice(1)+" "+fmt(d).slice(0,5)})();
-  const bt=(a2,p,x,ico,lab,cls)=>'<button class="pb'+(cls?' '+cls:'')+'" data-a="'+a2+'" data-id="'+p.id+'" data-id2="'+x.id+'"'+(a2==="delpend"?' data-t="Quitar"':'')+' aria-label="'+esc(T(lab))+'">'+ic(ico)+'<span>'+T(lab)+'</span></button>';
-  const card=({p,x})=>{const late=x.fecha<t;
-    return '<div class="card pl"><div class="pl1"><b class="'+(late?'late':'')+'">'+(late?'⚠ '+fmt(x.fecha).slice(0,5)+' · ':'')+(x.hora?esc(x.hora):T("Sin hora"))+'</b> · <b>'+esc(p.nombre)+'</b><span class="sub"> — '+esc(x.accion)+((x.dir||p.direccion)?' · 📍 '+esc(x.dir||p.direccion):'')+'</span></div>'+
-    '<div class="pl2">'+bt("donep",p,x,"check","Hecha","ok")+bt("editn",p,x,"edit","Cambiar")+bt("open",p,x,"users","Ficha")+bt("cal",p,x,"calendar","Calendario")+bt("ics",p,x,"download",".ics")+bt("delpend",p,x,"trash","Quitar","dng")+'</div></div>'};
-  let h=back0("Visitas")+'<h3 style="margin:6px 0 10px;font-size:18px">'+T("Planificar visitas")+'</h3><button class="pri" data-a="plnew" style="width:100%">'+ic("plus")+" "+T("Programar visita")+'</button>';
+  let h=back0("Visitas")+'<div class="plh"><h3>'+T("Planificar visitas")+'</h3><button class="pri sm" data-a="plnew">'+ic("plus")+" "+T("Programar visita")+'</button></div>';
   if(!L.length)h+='<div class="empty" style="margin-top:14px">'+T("No hay visitas programadas.")+'</div>';
-  else{let last=null;L.forEach(it=>{const k=it.x.fecha<t?"late":it.x.fecha;if(k!==last){h+='<h3 class="hr" style="margin-top:16px">'+esc(lab(it.x.fecha))+'<span class="cn" style="font-size:12px;font-weight:600;color:var(--mut)">'+L.filter(o=>(o.x.fecha<t?"late":o.x.fecha)===k).length+'</span></h3>';last=k}h+=card(it)});
-    h+='<button class="sm" data-a="icsall" style="width:100%;margin-top:14px">'+ic("download")+" "+T("Agregar todas al calendario (.ics)")+'</button>'}
-  $("app").innerHTML=h;
+  else{
+    h+='<div class="plw"><table class="plt"><thead><tr><th class="pc"></th><th class="pn">'+T("Nombre")+'</th><th class="ph">'+T("Hora")+'</th><th class="pa">'+T("De qué se trata")+'</th><th class="pl">'+T("Lugar")+'</th></tr></thead><tbody>';
+    let last=null;
+    L.forEach(({p,x})=>{const k=x.fecha<t?"late":x.fecha,late=x.fecha<t,key=p.id+"|"+x.id;
+      if(k!==last){h+='<tr class="pld"><td colspan="5"><div>'+esc(lab(x.fecha))+'<span class="cn">'+L.filter(o=>(o.x.fecha<t?"late":o.x.fecha)===k).length+'</span></div></td></tr>';last=k}
+      h+='<tr class="plr'+(plSel.has(key)?" on":"")+'" data-k="'+esc(key)+'"><td class="pc"><input type="checkbox" '+(plSel.has(key)?"checked":"")+' aria-label="'+esc(p.nombre)+'"></td><td class="pn">'+esc(shortName(p.nombre))+'</td><td class="ph'+(late?" late":"")+'">'+(late?"⚠ "+fmt(x.fecha).slice(0,5)+" · ":"")+(x.hora?esc(x.hora):"—")+'</td><td class="pa">'+esc(x.accion)+'</td><td class="pl">'+esc(x.dir||p.direccion||"—")+'</td></tr>'});
+    h+='</tbody></table></div>'}
+  $("app").innerHTML=h;plBar();
+  const w=$("app").querySelector(".plw");if(w){w.onclick=e=>{const tr=e.target.closest(".plr");if(!tr)return;const k=tr.dataset.k;plSel.has(k)?plSel.delete(k):plSel.add(k);tr.classList.toggle("on",plSel.has(k));tr.querySelector("input").checked=plSel.has(k);plBar()}}
 }
+const PL_ACT=[["done","check","Hecha",1],["edit","edit","Cambiar",0],["fic","users","Ficha",0],["cal","calendar","Calendario",0],["ics","download",".ics",1],["del","trash","Quitar",1]];
+function plBar(){
+  const bar=$("plBar");if(!bar)return;const n=plSel.size;
+  bar.hidden=view!=="plan";
+  bar.innerHTML=PL_ACT.map(([a,i,l,multi])=>{const on=n>=1&&(n===1||multi);return '<button type="button" class="pb'+(a==="del"?" dng":"")+(on?" on":" off")+'" data-pa="'+a+'"'+(on?"":" disabled")+' aria-label="'+esc(T(l))+'">'+ic(i)+'<span>'+T(l)+'</span></button>'}).join("");
+  bar.dataset.n=n;
+}
+function plPick(){return [...plSel].map(k=>{const [pid,xid]=k.split("|");const p=person(pid),x=p&&p.pend.find(y=>y.id===xid);return p&&x?{p,x}:null}).filter(Boolean)}
+function plConfirm(mode){
+  const L=plPick();if(!L.length)return;
+  delSt={mode:mode};const n=L.length;
+  $("delTitle").textContent=T(mode==="plandone"?"Cerrar sin registrar visita":"Quitar visitas programadas");
+  $("delSub").textContent=n+" "+T(n==1?"visita":"visitas");
+  $("delGo").hidden=false;$("delGo").textContent=T(mode==="plandone"?"Cerrar sin registrar":"Quitar");
+  $("delBody").innerHTML='<div class="note" style="margin-top:14px">'+T(mode==="plandone"?"Se sacan de la agenda. No se guardan en el historial ni cuentan como visita.":"Se quitan de la agenda. Esta acción no crea ninguna visita.")+'</div>'+L.map(({p,x})=>'<div class="sub" style="margin-top:6px">• '+esc(p.nombre)+' · '+fmt(x.fecha)+(x.hora?" "+esc(x.hora):"")+' — '+esc(x.accion)+'</div>').join("");
+  tr($("delBody"));openDlg("delDlg");
+}
+function plDo(mode){const L=plPick();L.forEach(({p,x})=>{if(mode==="plandone")x.hecho=true;else p.pend=p.pend.filter(y=>y.id!==x.id)});plSel.clear();save();closeDlg("delDlg");render();toast(mode==="plandone"?"Visitas cerradas ✓":"Visitas quitadas ✓")}
+function plIcs(){const L=plPick();if(!L.length)return;const ev=[];L.forEach(({p,x})=>ev.push(...icsEvent(p,x)));saveAs("visitas-"+TODAY()+".ics","text/calendar",new TextEncoder().encode(icsWrap(ev)).buffer)}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("#plBar [data-pa]");if(!b||b.disabled)return;const a=b.dataset.pa,L=plPick();if(!L.length)return;
+  if(a==="done"){if(L.length===1){const {p,x}=L[0];askDone(p.id,x.id)}else plConfirm("plandone")}
+  else if(a==="del")plConfirm("plandel");
+  else if(a==="ics"){L.length===1?addIcs(L[0].p.id,L[0].x.id):plIcs()}
+  else if(L.length===1){const {p,x}=L[0];
+    if(a==="edit"){curId=p.id;openNext(x.id)}
+    else if(a==="cal")addCal(p.id,x.id)
+    else if(a==="fic"){backTo={view,sub,tab:tabOf()};curId=p.id;view="person";render();window.scrollTo(0,0)}}
+});
 $("app").addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b)return;const a=b.dataset.a;
   if(a==="plnew")startPlan();
   else if(a==="editn"){curId=b.dataset.id;openNext(b.dataset.id2)}});
@@ -2304,8 +2357,8 @@ Buscar por nombre o código...|Search by name or code...|Rechercher par nom ou c
 Marcar como hecha|Mark as done|Marquer comme fait
 Registrar visita realizada|Record completed visit|Enregistrer la visite effectuée
 Abre el formulario con la fecha de hoy y guarda la visita.|Opens the form with today's date and saves the visit.|Ouvre le formulaire avec la date du jour et enregistre la visite.
-Solo marcar como hecha|Only mark as done|Marquer seulement comme fait
-No crea ninguna visita.|Does not create any visit.|Ne crée aucune visite.
+Cerrar sin registrar visita|Close without logging a visit|Fermer sans enregistrer de visite
+La saca de la agenda. No se guarda en el historial ni cuenta como visita.|It removes it from the schedule. It is not saved in the history and does not count as a visit.|La retire de l'agenda. Elle n'est pas enregistrée dans l'historique et ne compte pas comme visite.
 Cancelar|Cancel|Annuler
 Eliminar una visita|Delete a visit|Supprimer une visite
 Eliminar persona|Delete person|Supprimer la personne
@@ -2791,6 +2844,14 @@ Escribe el nombre de la persona|Type the person's name|Écrivez le nom de la per
 Visita programada ✓|Visit scheduled ✓|Visite programmée ✓
 Hecha|Done|Fait
 Ficha|Record|Fiche
+De qué se trata|What it is about|De quoi il s'agit
+Lugar|Place|Lieu
+Quitar visitas programadas|Remove scheduled visits|Retirer les visites programmées
+Cerrar sin registrar|Close without logging|Fermer sans enregistrer
+Se sacan de la agenda. No se guardan en el historial ni cuentan como visita.|They are removed from the schedule. They are not saved in the history and do not count as visits.|Elles sont retirées de l'agenda. Elles ne sont pas enregistrées dans l'historique et ne comptent pas comme visites.
+Se quitan de la agenda. Esta acción no crea ninguna visita.|They are removed from the schedule. This does not create any visit.|Elles sont retirées de l'agenda. Cette action ne crée aucune visite.
+Visitas cerradas ✓|Visits closed ✓|Visites fermées ✓
+Visitas quitadas ✓|Visits removed ✓|Visites retirées ✓
 `.split("\n").forEach(l=>{const a=l.split("|");if(a.length>2)D[a[0]]={en:a[1],fr:a[2]}});
 const T=s=>LANG==="es"||!D[s]?s:D[s][LANG];
 function tr(root){
