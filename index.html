@@ -361,6 +361,12 @@ body.nsc{overflow:hidden}html:has(body.nsc){overflow:hidden}
 .plt.vlt .pi{width:60px;max-width:60px}
 .plt.ort .pi{width:63px;max-width:63px;overflow:hidden}
 .plt.ebt2 td.pi,.plt.ebt2 th.pi{width:auto;max-width:90px;overflow:hidden;text-overflow:ellipsis}
+/* v1.17: Estudios más compacto (teléfono, nombre, iglesia) para ver el avance completo */
+.plt.ebt2 .pc{width:30px;min-width:30px}.plt.ebt2 td.pc,.plt.ebt2 th.pc{padding:0}
+.plt.ebt2 a.tl{width:30px}
+.plt.ebt2 .pn{left:30px;width:90px;min-width:90px;max-width:90px}
+.plt.ebt2 td.pi,.plt.ebt2 th.pi{max-width:70px}
+.plt.ebt2 td.pg,.plt.ebt2 th.pg{white-space:nowrap;overflow:visible;text-overflow:clip;width:1%}
 
 </style>
 <link rel="manifest" href="manifest.webmanifest">
@@ -667,7 +673,7 @@ const fmt=s=>s?s.split("-").reverse().join("/"):"";
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const TODAY=()=>iso(new Date());
 const addDays=(s,n)=>{const [y,m,d]=s.split("-").map(Number);const t=new Date(y,m-1,d+n);return iso(t)};
-const APP_VER="1.16";
+const APP_VER="1.17";
 const APP_URL=location.href.split("#")[0].split("?")[0].replace(/index\.html$/,"");
 const ESTADOS=["Activo","Inactivo","En otra IASD","Disciplinado","Apostasía","Desfraternizado","Paradero desconocido","Difunto"];
 const EST=["Testificador/a","Instructor/a Bíblico/a","Evangelista","Instructor/a laico"];
@@ -2281,7 +2287,7 @@ function renderList(){
 
 /* ---- Motivos de oración: una línea por registro ---- */
 const orKey=(p,k)=>k==="nm"?nm2(p.nombre):k==="ig"?(p.iglesia||""):k==="mot"?orTxt(p):(orTab==="ok"?(p.motOk||""):(p.motF||lastVisit(p)||""));
-const orOne=p=>orTxt(p).split(/\n+/).map(x=>x.trim()).filter(Boolean).join("  •  ");
+const orOne=p=>orTxt(p).split(/\n+/).map(x=>x.trim().replace(/^\d{1,2}\/\d{1,2}\/\d{2,4}\s*:\s*/,"")).filter(Boolean).join("  •  ");
 function renderOrac(){
   const ok=orTab==="ok",all=orList(),igs=hvIgs(all.map(p=>p.iglesia));if(hvIg&&!igs.includes(hvIg))hvIg="";
   if(orSel&&!all.some(p=>p.id===orSel))orSel=null;
