@@ -337,6 +337,19 @@ body.nsc{overflow:hidden}html:has(body.nsc){overflow:hidden}
 .plt.vlt .pn,.plt.ort .pn,.plt.ebt2 .pn{width:104px;min-width:104px;max-width:104px}
 .plt.vlt .pn{left:32px}
 .seg button{gap:0}.seg .cnt{margin-left:3px}
+/* Estudios: columnas ajustadas a su contenido */
+.plt.ebt2 td.pi,.plt.ebt2 td.ps,.plt.ebt2 td.pr,.plt.ebt2 td.pa2,.plt.ebt2 td.pg{min-width:0;width:1%}
+.plt.ebt2 td.pd{min-width:0}
+.plt.ebt2 th,.plt.ebt2 td{padding-left:5px;padding-right:5px}
+.plt.ebt2 .pk{min-width:0;width:1%;padding-left:3px;padding-right:3px}.plt.ebt2 th.pk svg{width:17px;height:17px;vertical-align:middle}
+.plt.ebt2 .pg{min-width:0}
+.ebb{width:32px;height:32px;min-height:0;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:99px;color:var(--ac)}.ebb svg{width:18px;height:18px}
+.lgr{display:flex;gap:12px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--bd);font-size:14.5px;line-height:1.35}.lgi{flex:0 0 74px;display:flex;align-items:center;justify-content:center;color:var(--ac);min-height:24px}.lgi svg{width:22px;height:22px}.lgi.lgw{justify-content:flex-start;color:var(--tx)}
+.lgi.lgw{flex:0 0 100px}
+/* v1.14: solo la casilla (y su celda) marcan la fila */
+.plt tr.plr{cursor:default}.plt td.pc{cursor:pointer}.plt .pc{width:44px;min-width:44px}.plt.vlt .pc{width:44px;min-width:44px}
+.plt .pn{left:44px}.plt.vlt .pn{left:44px}.plt.ebt2 .pn{left:44px}
+.plt td.pc,.plt th.pc{-webkit-tap-highlight-color:transparent}
 
 </style>
 <link rel="manifest" href="manifest.webmanifest">
@@ -357,6 +370,12 @@ body.nsc{overflow:hidden}html:has(body.nsc){overflow:hidden}
   <div class="hd"><h2 id="rvTitle">Registrar persona visitada</h2><div class="sub">Busca a la persona por nombre o código. Si no está, crea una nueva.</div></div>
   <div class="bd"><input id="rvQ" type="search" placeholder="Nombre o código..." autocomplete="off" style="margin-top:14px"><button class="pri" id="rvNew" style="width:100%;margin-top:12px">Nueva persona</button><div id="rvRes"></div></div>
   <div class="ft"><button id="rvClose">Cerrar</button></div>
+</dialog>
+
+<dialog id="ebLg">
+  <div class="hd"><h2>Significado de los símbolos</h2></div>
+  <div class="bd" id="ebLgBody"></div>
+  <div class="ft"><button class="pri" id="ebLgClose">Cerrar</button></div>
 </dialog>
 
 <dialog id="vwDlg">
@@ -637,7 +656,7 @@ const fmt=s=>s?s.split("-").reverse().join("/"):"";
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const TODAY=()=>iso(new Date());
 const addDays=(s,n)=>{const [y,m,d]=s.split("-").map(Number);const t=new Date(y,m-1,d+n);return iso(t)};
-const APP_VER="1.12";
+const APP_VER="1.15";
 const APP_URL=location.href.split("#")[0].split("?")[0].replace(/index\.html$/,"");
 const ESTADOS=["Activo","Inactivo","En otra IASD","Disciplinado","Apostasía","Desfraternizado","Paradero desconocido","Difunto"];
 const EST=["Testificador/a","Instructor/a Bíblico/a","Evangelista","Instructor/a laico"];
@@ -724,6 +743,7 @@ link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0
 cap:'<path d="M2 9l10-5 10 5-10 5-10-5zM6 11.500V16c0 1.500 3 3 6 3s6-1.500 6-3v-4.500M22 9v6"/>',
 drop:'<path d="M12 3.500s6 6.200 6 10.500a6 6 0 0 1-12 0c0-4.300 6-10.500 6-10.500z"/>',
 group:'<circle cx="12" cy="7" r="2.600"/><circle cx="6" cy="16" r="2.600"/><circle cx="18" cy="16" r="2.600"/><path d="M10.500 9.200 7.500 13.600M13.500 9.200l3 4.400"/>',
+filtx:'<path d="M4 5h16l-6.500 7.500V19l-3 1.500v-8z"/><path d="M17 15l4 4M21 15l-4 4"/>',
 heart:'<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
 star:'<path d="M12 4l2.4 5 5.4.7-4 3.8 1 5.4L12 16.2 7.2 18.9l1-5.4-4-3.8 5.4-.7z"/>'
 };
@@ -2112,9 +2132,8 @@ document.addEventListener("click",e=>{
     else if(a==="ed")openPerson(p);
     else if(a==="del")delPerson(p);
     return}
-  const tr0=e.target.closest&&e.target.closest("#res .plr");if(!tr0)return;
+  const tr0=e.target.closest&&e.target.closest("#res .plr");if(!tr0||!e.target.closest("td.pc"))return;
   const id=tr0.dataset.k;
-  if(e.target.closest("[data-nm]")&&vlSel===id){backTo={view:"vlist",sub:null,tab:"visitas"};curId=id;view="person";render();window.scrollTo(0,0);return}
   vlSel=vlSel===id?null:id;
   document.querySelectorAll("#res .plr").forEach(r=>{const o=r.dataset.k===vlSel;r.classList.toggle("on",o);r.querySelector("input").checked=o});vlBar()});
 
@@ -2164,8 +2183,7 @@ document.addEventListener("click",e=>{
     else if(a==="fic"){backTo={view:"orac",sub:null,tab:"orac"};curId=p.id;view="person";render();window.scrollTo(0,0)}
     else if(a==="ed")openPerson(p);
     return}
-  const tr0=e.target.closest("#app .plr");if(!tr0)return;const id=tr0.dataset.k;
-  if(e.target.closest("[data-nm]")&&orSel===id){backTo={view:"orac",sub:null,tab:"orac"};curId=id;view="person";render();window.scrollTo(0,0);return}
+  const tr0=e.target.closest("#app .plr");if(!tr0||!e.target.closest("td.pc"))return;const id=tr0.dataset.k;
   orSel=orSel===id?null:id;
   document.querySelectorAll("#app .plr").forEach(r=>{const o=r.dataset.k===orSel;r.classList.toggle("on",o);r.querySelector("input").checked=o});orBar()});
 
@@ -2223,7 +2241,7 @@ function renderPlan(){
       return '<tr class="plr'+(plSel.has(key)?" on":"")+'" data-k="'+esc(key)+'"><td class="pc"><input type="checkbox" '+(plSel.has(key)?"checked":"")+' aria-label="'+esc(p.nombre)+'"></td><td class="pn">'+esc(shortName(p.nombre))+'</td><td class="pi">'+esc(p.iglesia||"—")+'</td><td class="ph'+(late?" late":"")+'">'+(late?"⚠ "+fmt(x.fecha).slice(0,5)+" · ":"")+(x.hora?esc(x.hora):"—")+'</td><td class="pl">'+esc(x.dir||p.direccion||"—")+'</td><td class="pa">'+esc(x.accion)+'</td></tr>'});
     w.onclick=e=>{
       if(e.target.id==="plAll"){const on=e.target.checked;L.forEach(i=>{const k=i.p.id+"|"+i.x.id;on?plSel.add(k):plSel.delete(k)});w.querySelectorAll(".plr").forEach(r=>{r.classList.toggle("on",on);r.querySelector("input").checked=on});plBar();if(on)toast(L.length+" "+T(L.length==1?"marcada":"marcadas"));return}
-      const tr=e.target.closest(".plr");if(!tr)return;const k=tr.dataset.k;plSel.has(k)?plSel.delete(k):plSel.add(k);tr.classList.toggle("on",plSel.has(k));tr.querySelector("input").checked=plSel.has(k);const al=$("plAll");if(al)al.checked=L.length>0&&L.every(i=>plSel.has(i.p.id+"|"+i.x.id));plBar()}}
+      const tr=e.target.closest(".plr");if(!tr||!e.target.closest("td.pc"))return;const k=tr.dataset.k;plSel.has(k)?plSel.delete(k):plSel.add(k);tr.classList.toggle("on",plSel.has(k));tr.querySelector("input").checked=plSel.has(k);const al=$("plAll");if(al)al.checked=L.length>0&&L.every(i=>plSel.has(i.p.id+"|"+i.x.id));plBar()}}
   plBar();tr($("app"));
 }
 
@@ -2276,6 +2294,9 @@ function renderEb(){
   $("ebGo").onclick=ebFetch;if($("ebCfg"))$("ebCfg").onclick=()=>{E.edit=true;renderEb()};
   ebInner();tr($("app"));
 }
+const EB_AT=[["Amistad","Acompañamiento y compañerismo, sin estudio formal todavía"],["Asistencia","Asistencia social (ayuda, alimentos u otra necesidad)"],["Oración","Recibe oración"],["Liberación","Recibe atención de liberación"],["Est. básico","Estudio bíblico básico"],["Est. avanzado","Estudio bíblico avanzado"],["Profecías","Estudio sobre profecías"],["Salud","Estudio de salud"],["Otro","Otro tipo de atención"]];
+const EB_ATOLD={am:"Amistad",as:"Asistencia",or:"Oración",lb:"Liberación",eb:"Est. básico",eba:"Est. avanzado",ep:"Profecías",es:"Salud","estudio biblico basico":"Est. básico","estudio biblico avanzado":"Est. avanzado","estudio sobre profecias":"Profecías","estudio de salud":"Salud","asistencia social":"Asistencia"};
+function ebAt(f){const v=String(f["Atención"]||f["Interés"]||"").trim();if(!v)return "";const q=ebNq(v);if(EB_ATOLD[q])return EB_ATOLD[q];const h=EB_AT.find(a=>ebNq(a[0])===q);return h?h[0]:"Otro"}
 const EB_SUM=[["users","Estudiantes"],["book","Series"],["group","Grupos pequeños"],["cap","Graduados"],["drop","Bautizados"]];
 function ebInner(){
   const E=ebState(),b=$("ebBody"),cfgd=!!(E.url&&E.key);
@@ -2301,7 +2322,7 @@ function ebInner(){
     (igs.length>1?'<select class="cmp" id="ebIg"><option value="">'+T("Iglesias")+'</option>'+igs.map(x=>opt(x,x,ebIg)).join("")+'</select>':'')+
     (inss.length>1?'<select class="cmp" id="ebIn"><option value="">'+T("Instructores")+'</option>'+inss.map(x=>opt(x,x,ebIn)).join("")+'</select>':'')+
     (sers.length>1?'<select class="cmp" id="ebSe"><option value="">'+T("Estudios")+'</option>'+sers.map(x=>opt(x,x,ebSe)).join("")+'</select>':'')+'</div>';
-  const sum='<div class="ebs">'+EB_SUM.map(([i,l],k)=>'<span class="si" title="'+esc(T(l))+'" aria-label="'+esc(T(l))+': '+vals[k]+'">'+ic(i)+'<b>'+vals[k]+'</b></span>').join("")+'<small>'+esc(stamp)+'</small></div>';
+  const sum='<div class="ebs">'+EB_SUM.map(([i,l],k)=>'<span class="si" title="'+esc(T(l))+'" aria-label="'+esc(T(l))+': '+vals[k]+'">'+ic(i)+'<b>'+vals[k]+'</b></span>').join("")+((ebIg||ebIn||ebSe)?'<button type="button" class="ebb" id="ebClr" title="'+esc(T("Limpiar filtros"))+'" aria-label="'+esc(T("Limpiar filtros"))+'">'+ic("filtx")+'</button>':'')+'<button type="button" class="ebb" id="ebInfo" title="'+esc(T("Significado de los símbolos"))+'" aria-label="'+esc(T("Significado de los símbolos"))+'">'+ic("info")+'</button><small>'+esc(stamp)+'</small></div>';
   if(!L.length){b.innerHTML=flt+sum+'<div class="empty">'+T("Aún no hay estudiantes.")+'</div>';ebWire();return}
   /* grupos */
   const G=new Map();
@@ -2312,16 +2333,16 @@ function ebInner(){
     else ks=[f["Iglesia"]||T("Sin iglesia")];
     ks.filter(k=>!(ebGrp==="in"&&ebIn)||k===ebIn).forEach(k=>{if(!G.has(k))G.set(k,[]);G.get(k).push(f)})});
   const keys=[...G.keys()].sort(ebGrp==="av"?((a,c)=>c-a):((a,c)=>String(a).localeCompare(String(c),"es")));
-  const ek=(f,k)=>k==="nm"?ebName(f):k==="ig"?(f["Iglesia"]||""):k==="se"?(f["Estudio bíblico"]||""):k==="lec"?Math.round(ebLesson(f)/ebTot(f)*100):k==="in"?(f["Instructores"]||""):k==="at"?(f["Atención"]||f["Interés"]||""):"";
+  const ek=(f,k)=>k==="nm"?ebName(f):k==="ig"?(f["Iglesia"]||""):k==="se"?(f["Estudio bíblico"]||""):k==="lec"?Math.round(ebLesson(f)/ebTot(f)*100):k==="in"?(f["Instructores"]||""):k==="at"?ebAt(f):"";
   const cmp=hvCmp("eb",ek),items=[];
   keys.forEach(k=>{const r=G.get(k).slice().sort(cmp),g=r.filter(f=>f["Graduado"]).length,bt=r.filter(f=>f["Bautizado"]).length,nm=ebGrp==="av"?T(EB_BK[k]):k;
     items.push({hd:nm,n:r.length,g:ebGrp!=="av"?g:0,b:ebGrp!=="av"?bt:0});r.forEach(f=>items.push(f))});
-  b.innerHTML=flt+sum+'<div class="plw"><table class="plt ebt2"><thead><tr><th class="pc"></th>'+hvTh("eb","nm","pn",T("Nombre"))+hvTh("eb","ig","pi",T("Iglesia"))+hvTh("eb","se","ps",T("Estudio bíblico"))+hvTh("eb","lec","pg",T("Avance"))+hvTh("eb","in","pr",T("Instructor"))+hvTh("eb","at","pa2",T("Atención"))+'<th class="pk">'+T("Graduado")+'</th><th class="pk">'+T("Bautizado")+'</th><th class="pd">'+T("Detalles")+'</th></tr></thead><tbody></tbody></table></div>';
+  b.innerHTML=flt+sum+'<div class="plw"><table class="plt ebt2"><thead><tr><th class="pc"></th>'+hvTh("eb","nm","pn",T("Nombre"))+hvTh("eb","ig","pi",T("Iglesia"))+hvTh("eb","lec","pg",T("Avance"))+hvTh("eb","se","ps",T("Estudio bíblico"))+hvTh("eb","in","pr",T("Instructor"))+hvTh("eb","at","pa2",T("Atención"))+'<th class="pk" title="'+esc(T("Graduado"))+'" aria-label="'+esc(T("Graduado"))+'">'+ic("cap")+'</th><th class="pk" title="'+esc(T("Bautizado"))+'" aria-label="'+esc(T("Bautizado"))+'">'+ic("drop")+'</th><th class="pd">'+T("Detalles")+'</th></tr></thead><tbody></tbody></table></div>';
   const w=b.querySelector(".plw");
   lazyRows(w,w.querySelector("tbody"),items,it=>{
     if(it.hd!==undefined)return '<tr class="pld"><td colspan="10"><div>'+esc(it.hd)+'<span class="cn">'+it.n+(it.g?' · '+it.g+' '+ic('cap'):'')+(it.b?' · '+it.b+' '+ic('drop'):'')+'</span></div></td></tr>';
     const f=it,n=ebLesson(f),tot=ebTot(f),pc=Math.min(100,Math.round(n/tot*100)),tel=(f["Teléfono"]||"").replace(/\D/g,"");
-    return '<tr class="plr"><td class="pc">'+(tel?'<a class="tl" href="tel:+'+tel+'" aria-label="'+esc(T("Llamar")+" "+ebName(f))+'">'+ic("phone")+'</a>':'')+'</td><td class="pn">'+esc(nmS(ebName(f)))+'</td><td class="pi">'+esc(f["Iglesia"]||"—")+'</td><td class="ps">'+esc(f["Estudio bíblico"]||"—")+'</td><td class="pg">'+n+"/"+tot+" · "+pc+" %</td><td class=\"pr\">"+esc(f["Instructores"]||"—")+'</td><td class="pa2">'+esc(T(f["Atención"]||f["Interés"]||"")||"—")+'</td><td class="pk">'+(f["Graduado"]?"✔":"")+'</td><td class="pk">'+(f["Bautizado"]?"✔":"")+'</td><td class="pd">'+esc(f["Detalles"]||"")+'</td></tr>'});
+    return '<tr class="plr"><td class="pc">'+(tel?'<a class="tl" href="tel:+'+tel+'" aria-label="'+esc(T("Llamar")+" "+ebName(f))+'">'+ic("phone")+'</a>':'')+'</td><td class="pn">'+esc(nmS(ebName(f)))+'</td><td class="pi">'+esc(f["Iglesia"]||"—")+'</td><td class="pg">'+n+"/"+tot+" · "+pc+'%</td><td class="ps">'+esc(f["Estudio bíblico"]||"—")+'</td><td class="pr">'+esc(f["Instructores"]||"—")+'</td><td class="pa2">'+esc(T(ebAt(f))||"—")+'</td><td class="pk">'+(f["Graduado"]?"✔":"")+'</td><td class="pk">'+(f["Bautizado"]?"✔":"")+'</td><td class="pd">'+esc(f["Detalles"]||"")+'</td></tr>'});
   ebWire();
   if(typeof fitTable==="function")fitTable();
 }
@@ -2330,6 +2351,8 @@ function ebWire(){
   if(g("ebIg"))g("ebIg").onchange=e=>{ebIg=e.target.value;renderEb()};
   if(g("ebIn"))g("ebIn").onchange=e=>{ebIn=e.target.value;renderEb()};
   if(g("ebSe"))g("ebSe").onchange=e=>{ebSe=e.target.value;renderEb()};
+  if(g("ebClr"))g("ebClr").onclick=()=>{ebIg="";ebIn="";ebSe="";renderEb()};
+  if(g("ebInfo"))g("ebInfo").onclick=ebLegend;
   if(g("ebGrp"))g("ebGrp").onchange=e=>{ebGrp=e.target.value;renderEb()};
 }
 
@@ -2341,6 +2364,18 @@ setTimeout(()=>{try{
   const d=bkDays();if(d!=null&&d<30)return;if(db.bkAsk===TODAY())return;
   db.bkAsk=TODAY();save();
   toast(d==null?"Aún no tienes copia de seguridad. Guárdala para no perder tus datos.":"Hace más de 30 días que no guardas una copia de seguridad.",{label:"Guardar copia",fn:()=>doBackup().then(()=>toast("Copia guardada ✓"))},14000)}catch(e){}},4000);
+
+/* ---- ventana "i": significado de símbolos y tipos de atención ---- */
+function ebLegend(){
+  const row=(i,t)=>'<div class="lgr"><span class="lgi">'+i+'</span><span>'+T(t)+'</span></div>';
+  $("ebLgBody").innerHTML='<h3 style="margin:6px 0 4px">'+T("Símbolos")+'</h3>'+
+   row(ic("users"),"Estudiantes que hay con los filtros actuales")+row(ic("book"),"Estudios bíblicos distintos (series)")+row(ic("group"),"Grupos pequeños distintos")+
+   row(ic("cap"),"Estudiantes que terminaron el curso")+row(ic("drop"),"Estudiantes ya bautizados")+row(ic("phone"),"Toca para llamar al estudiante (solo si tiene teléfono)")+
+   row("<b>✔</b>","Marca que indica que sí (graduado o bautizado)")+row(ic("filtx"),"Limpia los filtros de iglesia, instructor y estudio")+
+   row("<b>12 · 3</b>","Junto al nombre de cada grupo: estudiantes del grupo, y cuántos son graduados y bautizados")+
+   '<h3 style="margin:16px 0 4px">'+T("Tipo de atención")+'</h3>'+EB_AT.map(a=>'<div class="lgr"><span class="lgi lgw"><b>'+T(a[0])+'</b></span><span>'+T(a[1])+'</span></div>').join("");
+  openDlg("ebLg")}
+$("ebLgClose").onclick=()=>closeDlg("ebLg");
 
 $("bClose").onclick=()=>$("bDlg").close();
 
@@ -3192,6 +3227,27 @@ Aún no has guardado ninguna copia.|You haven't saved any backup yet.|Vous n'ave
 Aún no tienes copia de seguridad. Guárdala para no perder tus datos.|You don't have a backup yet. Save one so you don't lose your data.|Vous n'avez pas encore de sauvegarde. Enregistrez-en une pour ne pas perdre vos données.
 Hace más de 30 días que no guardas una copia de seguridad.|It has been over 30 days since your last backup.|Cela fait plus de 30 jours que vous n'avez pas fait de sauvegarde.
 Con más de 60 personas, el informe completo en PDF lleva solo las columnas esenciales; el detalle completo está en Excel.|With more than 60 people, the full PDF report carries only the essential columns; the complete detail is in Excel.|Avec plus de 60 personnes, le rapport complet en PDF ne contient que les colonnes essentielles ; le détail complet est dans Excel.
+Limpiar filtros|Clear filters|Effacer les filtres
+Significado de los símbolos|Meaning of the symbols|Signification des symboles
+Símbolos|Symbols|Symboles
+Estudiantes que hay con los filtros actuales|Students with the current filters|Étudiants avec les filtres actuels
+Estudios bíblicos distintos (series)|Different Bible studies (series)|Études bibliques différentes (séries)
+Grupos pequeños distintos|Different small groups|Petits groupes différents
+Estudiantes que terminaron el curso|Students who finished the course|Étudiants qui ont terminé le cours
+Estudiantes ya bautizados|Students already baptized|Étudiants déjà baptisés
+Toca para llamar al estudiante (solo si tiene teléfono)|Tap to call the student (only if there is a phone number)|Touchez pour appeler l'étudiant (seulement s'il a un téléphone)
+Marca que indica que sí (graduado o bautizado)|Mark meaning yes (graduated or baptized)|Marque indiquant oui (diplômé ou baptisé)
+Limpia los filtros de iglesia, instructor y estudio|Clears the church, instructor and study filters|Efface les filtres d'église, d'instructeur et d'étude
+Junto al nombre de cada grupo: estudiantes del grupo, y cuántos son graduados y bautizados|Next to each group name: students in the group, and how many are graduated and baptized|À côté du nom de chaque groupe : étudiants du groupe, et combien sont diplômés et baptisés
+Acompañamiento y compañerismo, sin estudio formal todavía|Companionship and fellowship, no formal study yet|Accompagnement et fraternité, sans étude formelle pour l'instant
+Asistencia social (ayuda, alimentos u otra necesidad)|Social assistance (help, food or another need)|Assistance sociale (aide, nourriture ou autre besoin)
+Recibe oración|Receives prayer|Reçoit la prière
+Recibe atención de liberación|Receives deliverance ministry|Reçoit un accompagnement de délivrance
+Estudio bíblico básico|Basic Bible study|Étude biblique de base
+Estudio bíblico avanzado|Advanced Bible study|Étude biblique avancée
+Estudio sobre profecías|Prophecy study|Étude sur les prophéties
+Estudio de salud|Health study|Étude sur la santé
+Otro tipo de atención|Another type of care|Autre type de soin
 `.split("\n").forEach(l=>{const a=l.split("|");if(a.length>2)D[a[0]]={en:a[1],fr:a[2]}});
 const T=s=>LANG==="es"||!D[s]?s:D[s][LANG];
 function tr(root){
