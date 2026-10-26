@@ -350,6 +350,17 @@ body.nsc{overflow:hidden}html:has(body.nsc){overflow:hidden}
 .plt tr.plr{cursor:default}.plt td.pc{cursor:pointer}.plt .pc{width:44px;min-width:44px}.plt.vlt .pc{width:44px;min-width:44px}
 .plt .pn{left:44px}.plt.vlt .pn{left:44px}.plt.ebt2 .pn{left:44px}
 .plt td.pc,.plt th.pc{-webkit-tap-highlight-color:transparent}
+/* v1.16: líneas alternadas (verde pastel tenue) e Iglesia más angosta */
+:root{--zb:#eef5ec}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--zb:#1a2a21}}
+:root[data-theme="dark"]{--zb:#1a2a21}
+.plt tr.plr.z1 td{background:var(--zb)}
+.plt tr.plr.z1.on td,.plt tr.plr.z0.on td{background:#dcebe1}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .plt tr.plr.on td{background:#23402f}}
+.plt .pi{min-width:0;width:83px;max-width:83px;overflow:hidden;text-overflow:ellipsis}
+.plt.vlt .pi{width:60px;max-width:60px}
+.plt.ort .pi{width:63px;max-width:63px;overflow:hidden}
+.plt.ebt2 td.pi,.plt.ebt2 th.pi{width:auto;max-width:90px;overflow:hidden;text-overflow:ellipsis}
 
 </style>
 <link rel="manifest" href="manifest.webmanifest">
@@ -656,7 +667,7 @@ const fmt=s=>s?s.split("-").reverse().join("/"):"";
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const TODAY=()=>iso(new Date());
 const addDays=(s,n)=>{const [y,m,d]=s.split("-").map(Number);const t=new Date(y,m-1,d+n);return iso(t)};
-const APP_VER="1.15";
+const APP_VER="1.16";
 const APP_URL=location.href.split("#")[0].split("?")[0].replace(/index\.html$/,"");
 const ESTADOS=["Activo","Inactivo","En otra IASD","Disciplinado","Apostasía","Desfraternizado","Paradero desconocido","Difunto"];
 const EST=["Testificador/a","Instructor/a Bíblico/a","Evangelista","Instructor/a laico"];
@@ -2033,7 +2044,7 @@ async function ebFetch(){
     if(!/^https:\/\/script\.google\.com\/.+\/exec$/.test(u)){ebMsg(T("El enlace no es válido. Debe empezar con https://script.google.com y terminar en /exec."),1);return}
     if(!k){ebMsg(T("Falta la clave del pastor."),1);return}
     E.url=u;E.key=k;delete E.edit}
-  ebMsg(T("Trayendo estudios…"));$("ebGo").disabled=true;
+  ebMsg(T("Importando estudios…"));$("ebGo").disabled=true;
   try{
     const r=await fetch(E.url+(E.url.includes("?")?"&":"?")+"k="+encodeURIComponent(E.key),{redirect:"follow"});
     const j=await r.json();
@@ -2235,10 +2246,11 @@ function renderPlan(){
   if(w){
     const cnt={};L.forEach(i=>{const k=i.x.fecha<t?"late":i.x.fecha;cnt[k]=(cnt[k]||0)+1});
     const items=[];let last=null;L.forEach(i=>{const k=i.x.fecha<t?"late":i.x.fecha;if(k!==last){items.push({hd:lab(i.x.fecha),n:cnt[k]});last=k}items.push(i)});
+    let zk=0;
     lazyRows(w,w.querySelector("tbody"),items,it=>{
-      if(it.hd!==undefined)return '<tr class="pld"><td colspan="6"><div>'+esc(it.hd)+'<span class="cn">'+it.n+'</span></div></td></tr>';
+      if(it.hd!==undefined){zk=0;return '<tr class="pld"><td colspan="6"><div>'+esc(it.hd)+'<span class="cn">'+it.n+'</span></div></td></tr>'}
       const {p,x}=it,late=x.fecha<t,key=p.id+"|"+x.id;
-      return '<tr class="plr'+(plSel.has(key)?" on":"")+'" data-k="'+esc(key)+'"><td class="pc"><input type="checkbox" '+(plSel.has(key)?"checked":"")+' aria-label="'+esc(p.nombre)+'"></td><td class="pn">'+esc(shortName(p.nombre))+'</td><td class="pi">'+esc(p.iglesia||"—")+'</td><td class="ph'+(late?" late":"")+'">'+(late?"⚠ "+fmt(x.fecha).slice(0,5)+" · ":"")+(x.hora?esc(x.hora):"—")+'</td><td class="pl">'+esc(x.dir||p.direccion||"—")+'</td><td class="pa">'+esc(x.accion)+'</td></tr>'});
+      return '<tr class="plr z'+(zk++%2)+(plSel.has(key)?" on":"")+'" data-k="'+esc(key)+'"><td class="pc"><input type="checkbox" '+(plSel.has(key)?"checked":"")+' aria-label="'+esc(p.nombre)+'"></td><td class="pn">'+esc(shortName(p.nombre))+'</td><td class="pi">'+esc(p.iglesia||"—")+'</td><td class="ph'+(late?" late":"")+'">'+(late?"⚠ "+fmt(x.fecha).slice(0,5)+" · ":"")+(x.hora?esc(x.hora):"—")+'</td><td class="pl">'+esc(x.dir||p.direccion||"—")+'</td><td class="pa">'+esc(x.accion)+'</td></tr>'});
     w.onclick=e=>{
       if(e.target.id==="plAll"){const on=e.target.checked;L.forEach(i=>{const k=i.p.id+"|"+i.x.id;on?plSel.add(k):plSel.delete(k)});w.querySelectorAll(".plr").forEach(r=>{r.classList.toggle("on",on);r.querySelector("input").checked=on});plBar();if(on)toast(L.length+" "+T(L.length==1?"marcada":"marcadas"));return}
       const tr=e.target.closest(".plr");if(!tr||!e.target.closest("td.pc"))return;const k=tr.dataset.k;plSel.has(k)?plSel.delete(k):plSel.add(k);tr.classList.toggle("on",plSel.has(k));tr.querySelector("input").checked=plSel.has(k);const al=$("plAll");if(al)al.checked=L.length>0&&L.every(i=>plSel.has(i.p.id+"|"+i.x.id));plBar()}}
@@ -2259,9 +2271,10 @@ function renderList(){
     if(!(main.length||otras.length)){$("res").innerHTML='<div class="empty">'+T(n0?"Nadie coincide con la búsqueda.":"Aún no hay personas.<br>Toca “Registrar persona visitada” para empezar.")+'</div>';tr($("res"));vlBar();return}
     $("res").innerHTML=vlTable();tr($("res"));
     const w=$("res").querySelector(".plw"),items=main.concat(otras.length?[{otras:otras.length}]:[],otras);
+    let zk=0;
     lazyRows(w,w.querySelector("tbody"),items,p=>{
-      if(p.otras!==undefined)return '<tr class="pld"><td colspan="6"><div>'+T("Otras coincidencias")+'<span class="cn">'+p.otras+'</span></div></td></tr>';
-      const lv=lastVisit(p),on=vlSel===p.id;return '<tr class="plr'+(on?" on":"")+'" data-k="'+esc(p.id)+'"><td class="pc"><input type="checkbox" '+(on?"checked":"")+' aria-label="'+esc(p.nombre)+'"></td><td class="pn" data-nm="1">'+esc(shortName(p.nombre))+'</td><td class="pi">'+esc(p.iglesia||"—")+'</td><td class="pt">'+esc(catShort(p.categoria))+'</td><td class="ph">'+hvShort(lv)+'</td><td class="pv">'+p.visits.length+'</td></tr>'});
+      if(p.otras!==undefined){zk=0;return '<tr class="pld"><td colspan="6"><div>'+T("Otras coincidencias")+'<span class="cn">'+p.otras+'</span></div></td></tr>'}
+      const lv=lastVisit(p),on=vlSel===p.id;return '<tr class="plr z'+(zk++%2)+(on?" on":"")+'" data-k="'+esc(p.id)+'"><td class="pc"><input type="checkbox" '+(on?"checked":"")+' aria-label="'+esc(p.nombre)+'"></td><td class="pn" data-nm="1">'+esc(shortName(p.nombre))+'</td><td class="pi">'+esc(p.iglesia||"—")+'</td><td class="pt">'+esc(catShort(p.categoria))+'</td><td class="ph">'+hvShort(lv)+'</td><td class="pv">'+p.visits.length+'</td></tr>'});
     vlBar();
   }
 }
@@ -2281,7 +2294,8 @@ function renderOrac(){
     if(!base.length){$("orRes").innerHTML='<div class="empty">'+T(all.length?"Nadie coincide con la búsqueda.":ok?"No hay oraciones contestadas todavía.":"No hay motivos de oración pendientes.")+'</div>';orBar();return}
     $("orRes").innerHTML='<div class="plw"><table class="plt ort"><thead><tr><th class="pc"></th>'+hvTh("or","nm","pn",T("Persona"))+hvTh("or","ig","pi",T("Iglesia"))+hvTh("or","mot","pm",T("Motivo"))+hvTh("or","fecha","pf",T(ok?"Contestada":"Fecha"))+'</tr></thead><tbody></tbody></table></div>';tr($("orRes"));
     const w=$("orRes").querySelector(".plw");
-    lazyRows(w,w.querySelector("tbody"),base,p=>{const on=orSel===p.id;return '<tr class="plr'+(on?" on":"")+'" data-k="'+esc(p.id)+'"><td class="pc"><input type="checkbox" '+(on?"checked":"")+' aria-label="'+esc(p.nombre)+'"></td><td class="pn" data-nm="1">'+esc(nmS(p.nombre))+'</td><td class="pi">'+esc(p.iglesia||"—")+'</td><td class="pm">'+esc(orOne(p))+'</td><td class="pf">'+hvShort(ok?p.motOk:(p.motF||lastVisit(p)))+'</td></tr>'});
+    let zk=0;
+    lazyRows(w,w.querySelector("tbody"),base,p=>{const on=orSel===p.id;return '<tr class="plr z'+(zk++%2)+(on?" on":"")+'" data-k="'+esc(p.id)+'"><td class="pc"><input type="checkbox" '+(on?"checked":"")+' aria-label="'+esc(p.nombre)+'"></td><td class="pn" data-nm="1">'+esc(nmS(p.nombre))+'</td><td class="pi">'+esc(p.iglesia||"—")+'</td><td class="pm">'+esc(orOne(p))+'</td><td class="pf">'+hvShort(ok?p.motOk:(p.motF||lastVisit(p)))+'</td></tr>'});
     orBar();
   }
 }
@@ -2302,10 +2316,10 @@ function ebInner(){
   const E=ebState(),b=$("ebBody"),cfgd=!!(E.url&&E.key);
   document.body.classList.toggle("nsc",cfgd&&!E.edit);
   if(!cfgd||E.edit){
-    $("ebGo").textContent=T("Guardar y traer estudios");
-    b.innerHTML='<div class="sub" style="margin-top:10px">'+T("Los estudiantes que registran las secretarias.")+'</div><label style="margin-top:14px">'+T("Enlace de la hoja de estudios")+'</label><input id="ebUrl" autocomplete="off" autocapitalize="none" placeholder="https://script.google.com/macros/s/…/exec" value="'+esc(E.url||"")+'"><label>'+T("Clave del pastor")+'</label><input id="ebKey" autocomplete="off" autocapitalize="none" value="'+esc(E.key||"")+'"><div class="sub" style="margin-top:10px">'+T("El enlace termina en /exec. La clave del pastor te la muestra la hoja en el menú Siervo Fiel.")+'</div>';
+    $("ebGo").textContent=T("Guardar e importar estudios");
+    b.innerHTML='<div class="sub" style="margin-top:10px">'+T("Los estudiantes que registran las secretarias.")+'</div><label style="margin-top:14px">'+T("Enlace de la hoja de estudios")+'</label><input id="ebUrl" autocomplete="off" autocapitalize="none" placeholder="https://script.google.com/macros/s/…/exec" value="'+esc(E.url||"")+'"><label>'+T("Clave del pastor")+'</label><input id="ebKey" autocomplete="off" autocapitalize="none" value="'+esc(E.key||"")+'"><div class="sub" style="margin-top:10px">'+T("El enlace termina en /exec. La clave del pastor te la muestra la hoja en el menú Siervo Fiel.")+'</div>'+ebHow();
     return}
-  $("ebGo").textContent=T("Traer resultados");
+  $("ebGo").textContent=T("Importar resultados");
   const ALLR=(E.filas||[]),F=ALLR.filter(f=>!f["Retirado"]).map(f=>f["Estudio bíblico"]?f:Object.assign({},f,{"Estudio bíblico":EB_DEFSE})),nRet=ALLR.length-F.length;
   const igs=hvIgs(F.map(f=>f["Iglesia"]));
   if(ebIg&&!igs.includes(ebIg))ebIg="";
@@ -2316,7 +2330,7 @@ function ebInner(){
   const L=F.filter(f=>(!ebIg||f["Iglesia"]===ebIg)&&(!ebIn||insOf(f).includes(ebIn))&&(!ebSe||f["Estudio bíblico"]===ebSe));
   const series=new Set(L.map(f=>f["Estudio bíblico"]).filter(Boolean)),gps=new Set(L.map(f=>f["GP"]).filter(Boolean));
   const vals=[L.length,series.size,gps.size,L.filter(f=>f["Graduado"]).length,L.filter(f=>f["Bautizado"]).length];
-  const stamp=(E.at?T("Actualizado: ")+new Date(E.at).toLocaleString(LANG,{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):T("Aún no se han traído estudios."))+(nRet?" · "+T("Retirados")+": "+nRet:"");
+  const stamp=(E.at?T("Actualizado: ")+new Date(E.at).toLocaleString(LANG,{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):T("Aún no se han importado estudios."))+(nRet?" · "+T("Retirados")+": "+nRet:"");
   const opt=(v,t,cur)=>'<option value="'+esc(v)+'"'+(v===cur?" selected":"")+'>'+esc(t)+'</option>';
   const flt='<div class="tbr ebf"><select class="cmp" id="ebGrp" aria-label="'+esc(T("Ver por"))+'">'+[["ig","Por iglesia"],["in","Por instructor"],["se","Por estudio"],["av","Por avance"]].map(([v,t])=>opt(v,T(t),ebGrp)).join("")+'</select>'+
     (igs.length>1?'<select class="cmp" id="ebIg"><option value="">'+T("Iglesias")+'</option>'+igs.map(x=>opt(x,x,ebIg)).join("")+'</select>':'')+
@@ -2339,10 +2353,11 @@ function ebInner(){
     items.push({hd:nm,n:r.length,g:ebGrp!=="av"?g:0,b:ebGrp!=="av"?bt:0});r.forEach(f=>items.push(f))});
   b.innerHTML=flt+sum+'<div class="plw"><table class="plt ebt2"><thead><tr><th class="pc"></th>'+hvTh("eb","nm","pn",T("Nombre"))+hvTh("eb","ig","pi",T("Iglesia"))+hvTh("eb","lec","pg",T("Avance"))+hvTh("eb","se","ps",T("Estudio bíblico"))+hvTh("eb","in","pr",T("Instructor"))+hvTh("eb","at","pa2",T("Atención"))+'<th class="pk" title="'+esc(T("Graduado"))+'" aria-label="'+esc(T("Graduado"))+'">'+ic("cap")+'</th><th class="pk" title="'+esc(T("Bautizado"))+'" aria-label="'+esc(T("Bautizado"))+'">'+ic("drop")+'</th><th class="pd">'+T("Detalles")+'</th></tr></thead><tbody></tbody></table></div>';
   const w=b.querySelector(".plw");
+  let zk=0;
   lazyRows(w,w.querySelector("tbody"),items,it=>{
-    if(it.hd!==undefined)return '<tr class="pld"><td colspan="10"><div>'+esc(it.hd)+'<span class="cn">'+it.n+(it.g?' · '+it.g+' '+ic('cap'):'')+(it.b?' · '+it.b+' '+ic('drop'):'')+'</span></div></td></tr>';
+    if(it.hd!==undefined){zk=0;return '<tr class="pld"><td colspan="10"><div>'+esc(it.hd)+'<span class="cn">'+it.n+(it.g?' · '+it.g+' '+ic('cap'):'')+(it.b?' · '+it.b+' '+ic('drop'):'')+'</span></div></td></tr>'}
     const f=it,n=ebLesson(f),tot=ebTot(f),pc=Math.min(100,Math.round(n/tot*100)),tel=(f["Teléfono"]||"").replace(/\D/g,"");
-    return '<tr class="plr"><td class="pc">'+(tel?'<a class="tl" href="tel:+'+tel+'" aria-label="'+esc(T("Llamar")+" "+ebName(f))+'">'+ic("phone")+'</a>':'')+'</td><td class="pn">'+esc(nmS(ebName(f)))+'</td><td class="pi">'+esc(f["Iglesia"]||"—")+'</td><td class="pg">'+n+"/"+tot+" · "+pc+'%</td><td class="ps">'+esc(f["Estudio bíblico"]||"—")+'</td><td class="pr">'+esc(f["Instructores"]||"—")+'</td><td class="pa2">'+esc(T(ebAt(f))||"—")+'</td><td class="pk">'+(f["Graduado"]?"✔":"")+'</td><td class="pk">'+(f["Bautizado"]?"✔":"")+'</td><td class="pd">'+esc(f["Detalles"]||"")+'</td></tr>'});
+    return '<tr class="plr z'+(zk++%2)+'"><td class="pc">'+(tel?'<a class="tl" href="tel:+'+tel+'" aria-label="'+esc(T("Llamar")+" "+ebName(f))+'">'+ic("phone")+'</a>':'')+'</td><td class="pn">'+esc(nmS(ebName(f)))+'</td><td class="pi">'+esc(f["Iglesia"]||"—")+'</td><td class="pg">'+n+"/"+tot+" · "+pc+'%</td><td class="ps">'+esc(f["Estudio bíblico"]||"—")+'</td><td class="pr">'+esc(f["Instructores"]||"—")+'</td><td class="pa2">'+esc(T(ebAt(f))||"—")+'</td><td class="pk">'+(f["Graduado"]?"✔":"")+'</td><td class="pk">'+(f["Bautizado"]?"✔":"")+'</td><td class="pd">'+esc(f["Detalles"]||"")+'</td></tr>'});
   ebWire();
   if(typeof fitTable==="function")fitTable();
 }
@@ -2376,6 +2391,19 @@ function ebLegend(){
    '<h3 style="margin:16px 0 4px">'+T("Tipo de atención")+'</h3>'+EB_AT.map(a=>'<div class="lgr"><span class="lgi lgw"><b>'+T(a[0])+'</b></span><span>'+T(a[1])+'</span></div>').join("");
   openDlg("ebLg")}
 $("ebLgClose").onclick=()=>closeDlg("ebLg");
+
+/* ---- explicación al final de la pantalla del enlace ---- */
+function ebHow(){
+  const li=t=>'<li>'+T(t)+'</li>';
+  return '<h3 style="margin:22px 0 6px">'+T("Cómo se importan los estudios")+'</h3><ol class="how">'+
+   li("Las secretarias registran a cada estudiante en el formulario de Estudios Bíblicos. Todo se guarda en una hoja de Google.")+
+   li("Aquí pones el enlace de la hoja y tu clave del pastor. La aplicación los guarda en tu teléfono.")+
+   li("Cuando tocas Importar resultados, la aplicación se conecta a la hoja e importa la lista de estudiantes a tu teléfono.")+
+   li("La aplicación solo lee la hoja. No cambia ni borra nada de lo que escribieron las secretarias.")+
+   li("Necesitas Internet solo para importar. Después puedes ver la lista sin conexión; verás los datos de la última vez que los importaste.")+
+   li("Para ver los cambios nuevos de las secretarias, toca Importar resultados otra vez.")+'</ol>'+
+   '<div class="note">'+T("El ícono de eslabones, arriba a la par de «Importar resultados», es el enlace con esa hoja: al tocarlo vuelves a esta pantalla para cambiar el enlace o la clave.")+'</div>'+
+   '<div class="sub" style="margin-top:8px">'+T("Los estudiantes marcados como retirados no se incluyen en la lista.")+'</div>'}
 
 $("bClose").onclick=()=>$("bDlg").close();
 
@@ -3074,13 +3102,13 @@ Me acompañó|Accompanied me|M'a accompagné
 Estudios bíblicos|Bible studies|Études bibliques
 Los estudiantes que registran las secretarias|The students recorded by the secretaries|Les étudiants enregistrés par les secrétaires
 Los estudiantes que registran las secretarias.|The students recorded by the secretaries.|Les étudiants enregistrés par les secrétaires.
-Guardar y traer estudios|Save and get studies|Enregistrer et récupérer les études
-Traer estudios|Get studies|Récupérer les études
+Guardar e importar estudios|Save and import studies|Enregistrer et importer les études
+Importar estudios|Import studies|Importer les études
 Enlace de la hoja de estudios|Study sheet link|Lien de la feuille des études
 Clave del pastor|Pastor key|Clé du pasteur
 El enlace termina en /exec. La clave del pastor te la muestra la hoja en el menú Siervo Fiel → Ver mi clave de pastor.|The link ends in /exec. The sheet shows the pastor key in the menu Siervo Fiel → Ver mi clave de pastor.|Le lien se termine par /exec. La feuille affiche la clé du pasteur dans le menu Siervo Fiel → Ver mi clave de pastor.
 Actualizado: |Updated: |Mis à jour : 
-Aún no se han traído estudios.|No studies have been fetched yet.|Aucune étude récupérée pour l'instant.
+Aún no se han importado estudios.|No studies have been imported yet.|Aucune étude importée pour l'instant.
 Estudiantes|Students|Étudiants
 Series|Series|Séries
 Grupos pequeños|Small groups|Petits groupes
@@ -3093,7 +3121,7 @@ Aún no hay estudiantes.|There are no students yet.|Aucun étudiant pour l'insta
 Cambiar enlace o clave|Change link or key|Changer le lien ou la clé
 El enlace no es válido. Debe empezar con https://script.google.com y terminar en /exec.|The link is not valid. It must start with https://script.google.com and end in /exec.|Le lien n'est pas valide. Il doit commencer par https://script.google.com et se terminer par /exec.
 Falta la clave del pastor.|The pastor key is missing.|La clé du pasteur est manquante.
-Trayendo estudios…|Getting studies…|Récupération des études…
+Importando estudios…|Importing studies…|Importation des études…
 La clave no es correcta.|The key is not correct.|La clé n'est pas correcte.
 Estudios actualizados ✓|Studies updated ✓|Études mises à jour ✓
 No se pudo leer la hoja. Revisa el enlace.|Could not read the sheet. Check the link.|Impossible de lire la feuille. Vérifiez le lien.
@@ -3202,7 +3230,7 @@ Iglesias|Churches|Églises
 Instructores|Instructors|Instructeurs
 Por estudio|By study|Par étude
 Por avance|By progress|Par progression
-Traer resultados|Get results|Récupérer les résultats
+Importar resultados|Import results|Importer les résultats
 seleccionadas|selected|sélectionnées
 marcada|selected|sélectionnée
 marcadas|selected|sélectionnées
@@ -3248,6 +3276,15 @@ Estudio bíblico avanzado|Advanced Bible study|Étude biblique avancée
 Estudio sobre profecías|Prophecy study|Étude sur les prophéties
 Estudio de salud|Health study|Étude sur la santé
 Otro tipo de atención|Another type of care|Autre type de soin
+Cómo se importan los estudios|How the studies are imported|Comment les études sont importées
+Las secretarias registran a cada estudiante en el formulario de Estudios Bíblicos. Todo se guarda en una hoja de Google.|The secretaries register each student in the Bible Studies form. Everything is saved in a Google Sheet.|Les secrétaires enregistrent chaque étudiant dans le formulaire d'Études bibliques. Tout est enregistré dans une feuille Google.
+Aquí pones el enlace de la hoja y tu clave del pastor. La aplicación los guarda en tu teléfono.|Here you enter the sheet link and your pastor key. The app saves them on your phone.|Ici vous saisissez le lien de la feuille et votre clé de pasteur. L'application les enregistre sur votre téléphone.
+Cuando tocas Importar resultados, la aplicación se conecta a la hoja e importa la lista de estudiantes a tu teléfono.|When you tap Import results, the app connects to the sheet and imports the student list to your phone.|Quand vous touchez Importer les résultats, l'application se connecte à la feuille et importe la liste des étudiants sur votre téléphone.
+La aplicación solo lee la hoja. No cambia ni borra nada de lo que escribieron las secretarias.|The app only reads the sheet. It does not change or delete anything the secretaries wrote.|L'application ne fait que lire la feuille. Elle ne modifie ni ne supprime rien de ce qu'ont écrit les secrétaires.
+Necesitas Internet solo para importar. Después puedes ver la lista sin conexión; verás los datos de la última vez que los importaste.|You only need Internet to import. Afterwards you can view the list offline; you will see the data from the last time you imported.|Internet n'est nécessaire que pour importer. Ensuite vous pouvez voir la liste hors connexion ; vous verrez les données de la dernière importation.
+Para ver los cambios nuevos de las secretarias, toca Importar resultados otra vez.|To see the secretaries' new changes, tap Import results again.|Pour voir les nouveaux changements des secrétaires, touchez Importer les résultats à nouveau.
+El ícono de eslabones, arriba a la par de «Importar resultados», es el enlace con esa hoja: al tocarlo vuelves a esta pantalla para cambiar el enlace o la clave.|The chain-link icon, next to “Import results”, is the link to that sheet: tap it to return to this screen and change the link or key.|L'icône de maillons, à côté de « Importer les résultats », est le lien avec cette feuille : touchez-la pour revenir à cet écran et changer le lien ou la clé.
+Los estudiantes marcados como retirados no se incluyen en la lista.|Students marked as withdrawn are not included in the list.|Les étudiants marqués comme retirés ne sont pas inclus dans la liste.
 `.split("\n").forEach(l=>{const a=l.split("|");if(a.length>2)D[a[0]]={en:a[1],fr:a[2]}});
 const T=s=>LANG==="es"||!D[s]?s:D[s][LANG];
 function tr(root){
