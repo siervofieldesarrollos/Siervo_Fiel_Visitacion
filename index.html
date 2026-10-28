@@ -367,6 +367,9 @@ body.nsc{overflow:hidden}html:has(body.nsc){overflow:hidden}
 .plt.ebt2 .pn{left:30px;width:90px;min-width:90px;max-width:90px}
 .plt.ebt2 td.pi,.plt.ebt2 th.pi{max-width:70px}
 .plt.ebt2 td.pg,.plt.ebt2 th.pg{white-space:nowrap;overflow:visible;text-overflow:clip;width:1%}
+.igtot{font-size:13.5px;color:var(--ac);margin:2px 0 6px}.igtot b{color:var(--tx)}
+.msg2{font-size:13px;color:var(--ok);min-height:18px;margin:6px 2px}
+.mrow[data-go="wipe"] .mt,.mrow[data-go="wipe"] .mi{color:var(--bad)}
 
 </style>
 <link rel="manifest" href="manifest.webmanifest">
@@ -458,9 +461,24 @@ body.nsc{overflow:hidden}html:has(body.nsc){overflow:hidden}
   <div class="ft"><button id="pinClose">Cerrar</button><button class="pri" id="pinGo">Guardar</button></div>
 </dialog>
 
+<dialog id="wipDlg">
+  <div class="hd"><h2>Borrar toda la información</h2><div class="sub">Esta acción vacía la aplicación en este teléfono.</div></div>
+  <div class="bd">
+    <div class="note warn" style="margin-top:14px"><b>Se borra todo:</b> personas, visitas, pendientes, motivos de oración, informe de feligresía, estudios importados, frases rápidas, datos del ministerio y PIN. El idioma se conserva.</div>
+    <div class="sub" style="margin-top:10px">No se toca la hoja de estudios de las secretarias ni las copias de seguridad que ya guardaste.</div>
+    <h3 style="margin:16px 0 6px">1. Guarda una copia (recomendado)</h3>
+    <button class="opt" id="wipBk"><span class="mi" data-ic="download"></span><span><b>Guardar copia de seguridad</b><span>Podrás restaurarla después en Configuración.</span></span></button>
+    <div class="msg2" id="wipBkMsg"></div>
+    <h3 style="margin:16px 0 6px">2. Confirma</h3>
+    <label for="wipType">Escribe BORRAR para continuar</label>
+    <input id="wipType" autocomplete="off" autocapitalize="characters" placeholder="BORRAR">
+  </div>
+  <div class="ft"><button id="wipCancel">Cancelar</button><button class="pri dng" id="wipGo" disabled style="background:var(--bad);color:#fff;border-color:var(--bad)">Borrar todo</button></div>
+</dialog>
+
 <dialog id="mDlg">
   <div class="hd"><h2>Datos del ministerio</h2><div class="sub">Se usan solo si las fichas no tienen estos datos.</div></div>
-  <div class="bd"><label>Misión/Asociación</label><input id="cMision"><label>Distrito</label><input id="cDistrito"><label>Pastor</label><input id="cPastor"><label>Iglesias del distrito (una por línea)</label><textarea id="cIgl" rows="5"></textarea></div>
+  <div class="bd"><label>Misión/Asociación</label><input id="cMision"><label>Distrito</label><input id="cDistrito"><label>Pastor</label><input id="cPastor"><label>Iglesias del distrito (una por línea)</label><div class="igtot" id="cIglN"></div><textarea id="cIgl" rows="5"></textarea></div>
   <div class="ft"><button id="cCancel">Cerrar</button><button class="pri" id="cSave">Guardar</button></div>
 </dialog>
 
@@ -673,7 +691,7 @@ const fmt=s=>s?s.split("-").reverse().join("/"):"";
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const TODAY=()=>iso(new Date());
 const addDays=(s,n)=>{const [y,m,d]=s.split("-").map(Number);const t=new Date(y,m-1,d+n);return iso(t)};
-const APP_VER="1.17";
+const APP_VER="1.18";
 const APP_URL=location.href.split("#")[0].split("?")[0].replace(/index\.html$/,"");
 const ESTADOS=["Activo","Inactivo","En otra IASD","Disciplinado","Apostasía","Desfraternizado","Paradero desconocido","Difunto"];
 const EST=["Testificador/a","Instructor/a Bíblico/a","Evangelista","Instructor/a laico"];
@@ -858,7 +876,7 @@ function renderSub(){
   $("app").innerHTML=back0()+'<h3 style="margin-top:6px;font-size:16px;color:var(--tx)">'+T(AVTITLE(sub))+' ('+L.length+')</h3>'+(L.length?L.map(({p,x})=>pendCard(p,x)).join("")+'<button class="sm" data-a="icsall" style="width:100%;margin-top:4px">'+ic("bell")+'Todas al calendario (.ics) con recordatorios</button><div class="note">El archivo trae un recordatorio 24 horas antes y otro a las 6:00 a. m. del día de la visita.</div>':'<div class="empty">'+T(AVEMPTY[sub])+'</div>');
 }
 function renderConfig(){
-  $("app").innerHTML='<div class="menu">'+mrow("building","Datos del ministerio",T("Misión, distrito, pastor e iglesias"),"cfg","min")+mrow("bell","Frases rápidas",T("Frases para tus visitas"),"cfg","qp")+mrow("book","Importar pasajes bíblicos",T("Tu versión favorita para el visor"),"cfg","imp")+mrow("download","Copia de seguridad",T("Guardar o restaurar tus datos"),"cfg","bk")+mrow("star","PIN de seguridad",db.pin?T("Activado"):T("Protege el acceso a la app"),"cfg","pin")+mrow("share","Compartir app",T("Envía el enlace de descarga"),"cfg","share")+mrow("heart","Apoyar este ministerio",T("Aporte voluntario"),"cfg","sup")+mrow("info","Acerca de",T("La aplicación y su desarrollador"),"cfg","about")+'</div><div id="shareBox" class="note" hidden></div>';
+  $("app").innerHTML='<div class="menu">'+mrow("building","Datos del ministerio",T("Misión, distrito, pastor e iglesias"),"cfg","min")+mrow("bell","Frases rápidas",T("Frases para tus visitas"),"cfg","qp")+mrow("book","Importar pasajes bíblicos",T("Tu versión favorita para el visor"),"cfg","imp")+mrow("download","Copia de seguridad",T("Guardar o restaurar tus datos"),"cfg","bk")+mrow("star","PIN de seguridad",db.pin?T("Activado"):T("Protege el acceso a la app"),"cfg","pin")+mrow("share","Compartir app",T("Envía el enlace de descarga"),"cfg","share")+mrow("heart","Apoyar este ministerio",T("Aporte voluntario"),"cfg","sup")+mrow("info","Acerca de",T("La aplicación y su desarrollador"),"cfg","about")+mrow("trash","Borrar toda la información",T("Elimina todos los datos de este teléfono"),"cfg","wipe")+'</div><div id="shareBox" class="note" hidden></div>';
 }
 const backLabel=()=>!backTo?"Visitas":backTo.view==="home"?"Inicio":backTo.view==="vlist"?"Visitas realizadas":backTo.view==="vsub"?AVTITLE(backTo.sub):backTo.view==="orac"?"Motivos de oración":"Visitas";
 function goBack(){const b=backTo||{view:"visitas"};view=b.view;sub=b.sub||null;render();window.scrollTo(0,0)}
@@ -886,7 +904,7 @@ $("app").onclick=e=>{
   if(a==="go"){if(go==="rep")openReports();else if(go==="pad")openPad();else if(go==="cov")openCovMenu();else if(go==="plan")goView("plan")}
   else if(a==="v"){if(go==="vlist")goView("vlist");else goView("vsub",go)}
   else if(a==="hsub"){homeSub=homeSub===b.dataset.k?null:b.dataset.k;render()}
-  else if(a==="cfg"){if(go==="min")openMin();else if(go==="imp")openImp();else if(go==="share")shareApp();else if(go==="about")openDlg("aDlg");else if(go==="sup")openSup();else if(go==="qp")openQp();else if(go==="eb")openEb();else if(go==="bk")openBk();else if(go==="pin")openPin()}
+  else if(a==="cfg"){if(go==="min")openMin();else if(go==="imp")openImp();else if(go==="share")shareApp();else if(go==="about")openDlg("aDlg");else if(go==="sup")openSup();else if(go==="wipe")openWipe();else if(go==="qp")openQp();else if(go==="eb")openEb();else if(go==="bk")openBk();else if(go==="pin")openPin()}
   else if(a==="bday")openBd()
   else if(a==="open"){if(view!=="person")backTo={view,sub,tab:tabOf()};curId=id;view="person";render();window.scrollTo(0,0)}
   else if(a==="back0")goView("visitas");
@@ -905,7 +923,7 @@ $("app").onclick=e=>{
   else if(a==="pickdel")delPick(p);
   else if(a==="delperson")delPerson(p);
 };
-document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{const v=b.dataset.v;if(v==="home")goView("home");else if(v==="config")goView("config");else if(v==="eb")goView("eb");else if(v==="orac")goView("orac");else goView("visitas")});
+document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{const v=b.dataset.v;if(v==="home")goView("home");else if(v==="config")goView("config");else if(v==="eb"){const E=ebState();if(view==="eb"&&E.edit&&E.url&&E.key)E.edit=false;goView("eb")}else if(v==="orac")goView("orac");else goView("visitas")});
 $("fab").onclick=()=>{if(view==="person")openVisit(null);else startRegistrar()};
 
 // ---- marcar pendiente como hecha
@@ -980,7 +998,9 @@ $("rvRes").onclick=e=>{const b=e.target.closest("[data-rk]");if(!b)return;closeD
   else{const m=db.padron.miembros.find(x=>x.id===b.dataset.rid);openPerson(null);if(m)prefillPm(m)}};
 
 // ---- ministerio, configuración, compartir
-function openMin(){const c=db.cfg||{};$("cMision").value=c.mision||"";$("cDistrito").value=c.distrito||"";$("cPastor").value=c.pastor||"";$("cIgl").value=(db.iglesias||[]).join("\n");openDlg("mDlg")}
+function openMin(){const c=db.cfg||{};$("cMision").value=c.mision||"";$("cDistrito").value=c.distrito||"";$("cPastor").value=c.pastor||"";$("cIgl").value=(db.iglesias||[]).join("\n");cIglN();openDlg("mDlg")}
+function cIglN(){const n=new Set($("cIgl").value.split("\n").map(x=>x.trim()).filter(Boolean)).size;$("cIglN").innerHTML=T("Iglesias registradas")+": <b>"+n+"</b>"}
+$("cIgl").addEventListener("input",cIglN);
 $("cCancel").onclick=()=>closeDlg("mDlg");
 $("cSave").onclick=()=>{db.cfg=Object.assign(db.cfg||{},{mision:$("cMision").value.trim(),distrito:$("cDistrito").value.trim(),pastor:$("cPastor").value.trim()});db.iglesias=[...new Set($("cIgl").value.split("\n").map(x=>x.trim()).filter(Boolean))];save();closeDlg("mDlg");toast("Datos guardados ✓")};
 function openImp(){$("impTxt").value="";$("impVer").value=db.nviVer||"NVI";$("impMsg").textContent=db.nvi?T("Ya hay pasajes guardados. Pegar una lista nueva los reemplaza."):"";$("impMore").hidden=!db.nvi;$("impMore").open=false;openDlg("impDlg")}
@@ -2310,7 +2330,9 @@ function renderOrac(){
 function renderEb(){
   if(view!=="eb")return;
   const E=ebState(),cfgd=!!(E.url&&E.key)&&!E.edit;
-  $("app").innerHTML='<div class="ebtop"><button class="pri" id="ebGo"></button>'+(cfgd?'<button class="sm lk" id="ebCfg" aria-label="'+esc(T("Cambiar enlace o clave"))+'" title="'+esc(T("Cambiar enlace o clave"))+'">'+ic("link")+'</button>':'')+'</div><div id="ebMsg" class="fmsg" hidden></div><div id="ebBody"></div>';
+  const hasCfg=!!(E.url&&E.key);
+  $("app").innerHTML=(cfgd?'':'<button class="gh sm" id="ebBack" style="margin:-6px 0 8px -8px">'+ic("back")+T(hasCfg?"Estudios":"Inicio")+'</button>')+'<div class="ebtop"><button class="pri" id="ebGo"></button>'+(cfgd?'<button class="sm lk" id="ebCfg" aria-label="'+esc(T("Cambiar enlace o clave"))+'" title="'+esc(T("Cambiar enlace o clave"))+'">'+ic("link")+'</button>':'')+'</div><div id="ebMsg" class="fmsg" hidden></div><div id="ebBody"></div>';
+  if($("ebBack"))$("ebBack").onclick=()=>{if(hasCfg){E.edit=false;renderEb()}else goView("home")};
   $("ebGo").onclick=ebFetch;if($("ebCfg"))$("ebCfg").onclick=()=>{E.edit=true;renderEb()};
   ebInner();tr($("app"));
 }
@@ -2410,6 +2432,20 @@ function ebHow(){
    li("Para ver los cambios nuevos de las secretarias, toca Importar resultados otra vez.")+'</ol>'+
    '<div class="note">'+T("El ícono de eslabones, arriba a la par de «Importar resultados», es el enlace con esa hoja: al tocarlo vuelves a esta pantalla para cambiar el enlace o la clave.")+'</div>'+
    '<div class="sub" style="margin-top:8px">'+T("Los estudiantes marcados como retirados no se incluyen en la lista.")+'</div>'}
+
+/* ---- Borrar toda la información ---- */
+function openWipe(){$("wipType").value="";$("wipGo").disabled=true;$("wipBkMsg").textContent="";openDlg("wipDlg")}
+$("wipCancel").onclick=()=>closeDlg("wipDlg");
+$("wipType").oninput=e=>{$("wipGo").disabled=e.target.value.trim().toUpperCase()!=="BORRAR"};
+$("wipBk").onclick=async()=>{try{await doBackup();$("wipBkMsg").textContent=T("Copia guardada ✓")}catch(e){$("wipBkMsg").textContent=T("No se pudo guardar la copia. Inténtalo de nuevo.")}};
+$("wipGo").onclick=()=>{
+  if($("wipType").value.trim().toUpperCase()!=="BORRAR")return;
+  const old=JSON.stringify(db),lang=LANG;
+  db={people:[],estados:{},lang,avisoOk:true};normDb();save();
+  closeDlg("wipDlg");closeDlg("mDlg");
+  hvIg="";orQ="";vlSel=null;orSel=null;plSel=new Set();ebIg="";ebIn="";ebSe="";
+  goView("home");
+  toast("Datos borrados ✓",{label:"Deshacer",fn:()=>{db=JSON.parse(old);normDb();save();render();toast("Datos recuperados ✓")}},12000)};
 
 $("bClose").onclick=()=>$("bDlg").close();
 
@@ -3291,6 +3327,22 @@ Necesitas Internet solo para importar. Después puedes ver la lista sin conexió
 Para ver los cambios nuevos de las secretarias, toca Importar resultados otra vez.|To see the secretaries' new changes, tap Import results again.|Pour voir les nouveaux changements des secrétaires, touchez Importer les résultats à nouveau.
 El ícono de eslabones, arriba a la par de «Importar resultados», es el enlace con esa hoja: al tocarlo vuelves a esta pantalla para cambiar el enlace o la clave.|The chain-link icon, next to “Import results”, is the link to that sheet: tap it to return to this screen and change the link or key.|L'icône de maillons, à côté de « Importer les résultats », est le lien avec cette feuille : touchez-la pour revenir à cet écran et changer le lien ou la clé.
 Los estudiantes marcados como retirados no se incluyen en la lista.|Students marked as withdrawn are not included in the list.|Les étudiants marqués comme retirés ne sont pas inclus dans la liste.
+Iglesias registradas|Registered churches|Églises enregistrées
+Borrar toda la información|Delete all information|Effacer toutes les informations
+Elimina todos los datos de este teléfono|Removes all data from this phone|Supprime toutes les données de ce téléphone
+Esta acción vacía la aplicación en este teléfono.|This action empties the app on this phone.|Cette action vide l'application sur ce téléphone.
+Se borra todo:|Everything is deleted:|Tout est supprimé :
+personas, visitas, pendientes, motivos de oración, informe de feligresía, estudios importados, frases rápidas, datos del ministerio y PIN. El idioma se conserva.|people, visits, pending items, prayer requests, membership report, imported studies, quick phrases, ministry data and PIN. The language is kept.|personnes, visites, tâches en attente, motifs de prière, rapport des membres, études importées, phrases rapides, données du ministère et PIN. La langue est conservée.
+No se toca la hoja de estudios de las secretarias ni las copias de seguridad que ya guardaste.|The secretaries' study sheet and the backups you already saved are not touched.|La feuille d'études des secrétaires et les sauvegardes déjà enregistrées ne sont pas touchées.
+1. Guarda una copia (recomendado)|1. Save a backup (recommended)|1. Enregistrez une sauvegarde (recommandé)
+Guardar copia de seguridad|Save backup|Enregistrer la sauvegarde
+Podrás restaurarla después en Configuración.|You can restore it later in Settings.|Vous pourrez la restaurer plus tard dans Paramètres.
+2. Confirma|2. Confirm|2. Confirmez
+Escribe BORRAR para continuar|Type BORRAR to continue|Tapez BORRAR pour continuer
+Borrar todo|Delete everything|Tout effacer
+Datos borrados ✓|Data deleted ✓|Données supprimées ✓
+Datos recuperados ✓|Data recovered ✓|Données récupérées ✓
+No se pudo guardar la copia. Inténtalo de nuevo.|The backup could not be saved. Try again.|La sauvegarde n'a pas pu être enregistrée. Réessayez.
 `.split("\n").forEach(l=>{const a=l.split("|");if(a.length>2)D[a[0]]={en:a[1],fr:a[2]}});
 const T=s=>LANG==="es"||!D[s]?s:D[s][LANG];
 function tr(root){
